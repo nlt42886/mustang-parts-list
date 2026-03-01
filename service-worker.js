@@ -1,8 +1,9 @@
-const CACHE_NAME = 'mvs-parts-v6';
+const CACHE_NAME = 'mvs-parts-v7';
 const ASSETS = [
   './',
   './index.html',
   './manifest.json',
+  './icons/icon.svg',
   './icons/icon-96x96.png',
   './icons/icon-144x144.png',
   './icons/icon-192x192.png',
