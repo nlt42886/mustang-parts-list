@@ -1,8 +1,9 @@
-const CACHE_NAME = 'mvs-parts-v6';
+const CACHE_NAME = 'mvs-parts-v7';
 const ASSETS = [
   './',
   './index.html',
   './manifest.json',
+  './icons/icon.svg',
   './icons/icon-96x96.png',
   './icons/icon-144x144.png',
   './icons/icon-192x192.png',
@@ -10,12 +11,15 @@ const ASSETS = [
   './icons/icon-512x512.png'
 ];
 
-// Install — cache all assets
+// Install — cache all assets (resilient: one miss won't abort the install)
 self.addEventListener('install', event => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => cache.addAll(ASSETS))
+    caches.open(CACHE_NAME).then(cache =>
+      Promise.allSettled(
+        ASSETS.map(url => cache.add(url).catch(err => console.warn('SW cache miss:', url, err)))
+      )
+    ).then(() => self.skipWaiting())
   );
-  self.skipWaiting();
 });
 
 // Activate — clean old caches

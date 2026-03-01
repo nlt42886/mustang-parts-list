@@ -8,6 +8,20 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="apple-touch-icon" href="icons/icon-192x192.png">
+<!-- Open Graph / share card -->
+<meta property="og:type"         content="website">
+<meta property="og:site_name"    content="Mustang Vacuum Systems">
+<meta property="og:title"        content="Mustang Parts List">
+<meta property="og:description"  content="Colt 48 / Colt 4828 — Electrical &amp; Mechanical Parts Reference">
+<meta property="og:url"          content="https://nlt42886.github.io/mustang-parts-list/">
+<meta property="og:image"        content="https://nlt42886.github.io/mustang-parts-list/icons/icon.svg">
+<meta property="og:image:type"  content="image/svg+xml">
+<meta property="og:image:width"  content="512">
+<meta property="og:image:height" content="512">
+<meta name="twitter:card"        content="summary">
+<meta name="twitter:title"       content="Mustang Parts List">
+<meta name="twitter:description" content="Colt 48 / Colt 4828 — Electrical &amp; Mechanical Parts Reference">
+<meta name="twitter:image"       content="https://nlt42886.github.io/mustang-parts-list/icons/icon.svg">
 <title>Mustang Parts List</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
@@ -284,6 +298,7 @@
     </div>
   </div>
   <div class="export-row">
+    <button class="export-btn" id="installBtn" style="display:none" onclick="installApp()">📲 Install App</button>
     <button class="export-btn" onclick="exportCSV()">📄 Export Word Doc</button>
     <button class="export-btn" onclick="window.print()">🖨️ Print</button>
     <button class="export-btn" onclick="shareApp()">📤 Share</button>
@@ -1024,7 +1039,27 @@ function shareApp() {
   }
 }
 
-// ── SERVICE WORKER ───────────────────────────────────────────────────────────
+// ── INSTALL PROMPT ────────────────────────────────────────────────────────────
+let _installPrompt = null;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  _installPrompt = e;
+  const btn = document.getElementById('installBtn');
+  if (btn) btn.style.display = '';
+});
+window.addEventListener('appinstalled', () => {
+  _installPrompt = null;
+  const btn = document.getElementById('installBtn');
+  if (btn) btn.style.display = 'none';
+});
+async function installApp() {
+  if (!_installPrompt) return;
+  _installPrompt.prompt();
+  const { outcome } = await _installPrompt.userChoice;
+  if (outcome === 'accepted') _installPrompt = null;
+}
+
+// ── SERVICE WORKER ────────────────────────────────────────────────────────────
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('./service-worker.js', { scope: '/mustang-parts-list/' });
 }
