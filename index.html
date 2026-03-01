@@ -284,6 +284,7 @@
     </div>
   </div>
   <div class="export-row">
+    <button class="export-btn" id="installBtn" style="display:none" onclick="installApp()">📲 Install App</button>
     <button class="export-btn" onclick="exportCSV()">📄 Export Word Doc</button>
     <button class="export-btn" onclick="window.print()">🖨️ Print</button>
     <button class="export-btn" onclick="shareApp()">📤 Share</button>
@@ -1024,7 +1025,27 @@ function shareApp() {
   }
 }
 
-// ── SERVICE WORKER ───────────────────────────────────────────────────────────
+// ── INSTALL PROMPT ────────────────────────────────────────────────────────────
+let _installPrompt = null;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  _installPrompt = e;
+  const btn = document.getElementById('installBtn');
+  if (btn) btn.style.display = '';
+});
+window.addEventListener('appinstalled', () => {
+  _installPrompt = null;
+  const btn = document.getElementById('installBtn');
+  if (btn) btn.style.display = 'none';
+});
+async function installApp() {
+  if (!_installPrompt) return;
+  _installPrompt.prompt();
+  const { outcome } = await _installPrompt.userChoice;
+  if (outcome === 'accepted') _installPrompt = null;
+}
+
+// ── SERVICE WORKER ────────────────────────────────────────────────────────────
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('./service-worker.js', { scope: '/mustang-parts-list/' });
 }
