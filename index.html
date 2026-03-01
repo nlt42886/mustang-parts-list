@@ -722,10 +722,6 @@
   </div>
 </div>
 
-<!-- Firebase SDK (compat, works in plain HTML with no build step) -->
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
-
 <script>
 // ── DATA ──────────────────────────────────────────────────────────────────────
 // [schematic_ref, category, description, part_number]
@@ -1596,42 +1592,11 @@ if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('./service-worker.js', { scope: '/mustang-parts-list/' });
 }
 
-// ── FIREBASE ──────────────────────────────────────────────────────────────────
-const firebaseConfig = {
-  apiKey: "REMOVED",
-  authDomain: "REMOVED",
-  projectId: "mustang-parts-list",
-  storageBucket: "REMOVED",
-  messagingSenderId: "REMOVED",
-  appId: "REMOVED"
-};
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
-
-// ── MASTER PIN ────────────────────────────────────────────────────────────────
-const MASTER_PIN_HASH = "REMOVED";
-
-async function hashPin(pin) {
-  const enc = new TextEncoder().encode(pin + "mustang-parts-v1");
-  const buf = await crypto.subtle.digest("SHA-256", enc);
-  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, "0")).join("");
-}
 
 function getWorkingData() {
   return activeData !== null ? activeData : data;
 }
 
-// On load: pull master data from Firebase (if the admin has saved one there)
-(async function loadMasterOnStart() {
-  try {
-    const snap = await db.collection("masterData").doc("current").get();
-    if (snap.exists && Array.isArray(snap.data().parts) && snap.data().parts.length > 0) {
-      activeData = snap.data().parts;
-      buildLegend();
-      render();
-    }
-  } catch (e) { /* silently fall back to hardcoded data */ }
-})();
 
 // ── EDIT MODE TOGGLE ──────────────────────────────────────────────────────────
 function toggleEditMode() {
@@ -1766,13 +1731,6 @@ async function executePinAction() {
     unsavedChanges = 0;
     updateEditBadge();
     closePinModal();
-    // Try to reload the Firebase master (same as on startup)
-    try {
-      const snap = await db.collection("masterData").doc("current").get();
-      if (snap.exists && Array.isArray(snap.data().parts) && snap.data().parts.length > 0) {
-        activeData = snap.data().parts;
-      }
-    } catch (e) {}
     buildLegend();
     render();
     showToast("↩️ Reset to master list");
@@ -1796,47 +1754,12 @@ async function executePinAction() {
   }
 }
 
-// ── FIREBASE SAVE / RESTORE ───────────────────────────────────────────────────
-async function saveParts(pin) {
-  const hash     = await hashPin(pin);
-  const isMaster = hash === MASTER_PIN_HASH;
-  const parts    = getWorkingData();
-  try {
-    const ref = isMaster
-      ? db.collection("masterData").doc("current")
-      : db.collection("userSaves").doc(hash);
-    await ref.set({ parts, savedAt: firebase.firestore.FieldValue.serverTimestamp() });
-    unsavedChanges = 0;
-    updateEditBadge();
-    showToast(isMaster
-      ? "✅ Saved as master — everyone will see your changes"
-      : "✅ Saved to your personal account");
-  } catch (e) {
-    showToast("⚠️ Save failed — check your connection");
-  }
+function saveParts(_pin) {
+  showToast("⚠️ Cloud sync is not available");
 }
 
-async function restoreParts(pin) {
-  const hash     = await hashPin(pin);
-  const isMaster = hash === MASTER_PIN_HASH;
-  try {
-    const ref  = isMaster
-      ? db.collection("masterData").doc("current")
-      : db.collection("userSaves").doc(hash);
-    const snap = await ref.get();
-    if (snap.exists && Array.isArray(snap.data().parts) && snap.data().parts.length > 0) {
-      activeData = snap.data().parts;
-      unsavedChanges = 0;
-      updateEditBadge();
-      buildLegend();
-      render();
-      showToast("✅ Parts list restored");
-    } else {
-      showToast("⚠️ No saved data found for that PIN");
-    }
-  } catch (e) {
-    showToast("⚠️ Restore failed — check your connection");
-  }
+function restoreParts(_pin) {
+  showToast("⚠️ Cloud sync is not available");
 }
 
 </script>
