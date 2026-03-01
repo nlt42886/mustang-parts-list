@@ -443,6 +443,125 @@
   }
   .search-tip .dismiss-btn:hover { opacity: 1; }
 
+  /* ── EDIT MODE ─────────────────────────────────────────────────────────── */
+  .edit-mode-btn.active { background: #c94020; color: #fff; border-color: #c94020; }
+  .edit-mode-btn.active:hover { background: #a33319; border-color: #a33319; }
+
+  .edit-badge {
+    display: none;
+    background: rgba(255,255,255,0.3);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 1px 7px;
+    border-radius: 10px;
+    margin-left: 2px;
+    vertical-align: middle;
+  }
+
+  .edit-actions {
+    display: none;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+    padding: 8px 0 4px;
+    border-top: 2px dashed #c94020;
+    margin-top: 2px;
+  }
+  .edit-notice {
+    font-size: 12px;
+    color: #c94020;
+    font-weight: 600;
+  }
+
+  .row-edit-btn, .row-del-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 13px;
+    padding: 2px 5px;
+    border-radius: 4px;
+    opacity: 0.55;
+    transition: opacity 0.15s, background 0.15s;
+    line-height: 1;
+  }
+  .row-edit-btn:hover { opacity: 1; background: #e8f0fe; }
+  .row-del-btn:hover  { opacity: 1; background: #fdecea; }
+  .edit-cell { white-space: nowrap; padding: 4px 8px !important; }
+  th.edit-col-header { width: 68px; }
+
+  /* ── MODALS ─────────────────────────────────────────────────────────────── */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.55);
+    z-index: 9000;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+  }
+  .modal-box {
+    background: #fff;
+    border-radius: 16px;
+    padding: 26px 26px 20px;
+    max-width: 460px;
+    width: 100%;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.28);
+    display: flex;
+    flex-direction: column;
+    gap: 13px;
+  }
+  .modal-title {
+    font-size: 17px;
+    font-weight: 700;
+    color: #1F3864;
+  }
+  .modal-desc { font-size: 13px; color: #555; line-height: 1.5; }
+  .modal-field { display: flex; flex-direction: column; gap: 4px; }
+  .modal-field label {
+    font-size: 11px;
+    font-weight: 700;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+  }
+  .modal-field input {
+    border: 2px solid #D6E0F5;
+    border-radius: 8px;
+    padding: 9px 12px;
+    font-family: inherit;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .modal-field input:focus { border-color: #1A3FC1; }
+  .modal-field input.mono { font-family: 'IBM Plex Mono', monospace; }
+  .modal-btns {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    margin-top: 2px;
+  }
+  .modal-hint { font-size: 12px; color: #888; }
+  .modal-divider { border: none; border-top: 1px solid #e9edf5; }
+  .mbtn {
+    border-radius: 8px;
+    padding: 10px 20px;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+    border: 2px solid transparent;
+  }
+  .mbtn-primary   { background:#1F3864; color:#fff; }
+  .mbtn-primary:hover { background:#0F2E9A; }
+  .mbtn-secondary { background:#fff; color:#1F3864; border-color:#D6E0F5; }
+  .mbtn-secondary:hover { border-color:#1F3864; }
+  .mbtn-danger    { background:#c94020; color:#fff; }
+  .mbtn-danger:hover { background:#a33319; }
+
   /* Print styles */
   @media print {
     body { background: #fff; }
@@ -500,7 +619,15 @@
     <button class="export-btn" onclick="window.print()">🖨️ Print</button>
     <button class="export-btn" onclick="shareApp()">📤 Share</button>
     <button class="export-btn update-btn" onclick="checkForUpdates()" title="Check for Updates">⟳</button>
+    <button class="export-btn edit-mode-btn" id="editModeBtn" onclick="toggleEditMode()">✏️ Edit<span class="edit-badge" id="editBadge"></span></button>
     <span class="count" id="count"></span>
+  </div>
+  <div class="edit-actions" id="editActions">
+    <span class="edit-notice">✏️ Edit Mode — rows shown ungrouped for editing</span>
+    <button class="export-btn" onclick="addPart()">➕ Add Part</button>
+    <button class="export-btn" onclick="openPinModal('save')">💾 Save</button>
+    <button class="export-btn" onclick="openPinModal('restore')">📥 Restore</button>
+    <button class="export-btn" onclick="openPinModal('reset')">↩️ Reset</button>
   </div>
 </div>
 
@@ -519,6 +646,7 @@
         <th data-col="1" onclick="sortTable(1)">Category <span class="sort-arrow">▲</span></th>
         <th data-col="2" onclick="sortTable(2)">Description <span class="sort-arrow">▲</span></th>
         <th data-col="0" onclick="sortTable(0)">Schematic <span class="sort-arrow">▲</span></th>
+        <th class="edit-col-header" id="editColHeader" style="display:none"></th>
       </tr>
     </thead>
     <tbody id="tbody"></tbody>
@@ -527,6 +655,52 @@
 </div></div>
 
 </div><!-- end partsUI -->
+
+<!-- Part Edit / Add Modal -->
+<div class="modal-overlay" id="partModal" onclick="if(event.target===this)closePartModal()">
+  <div class="modal-box">
+    <div class="modal-title" id="pmTitle">Edit Part</div>
+    <div class="modal-field">
+      <label>Schematic Reference</label>
+      <input type="text" id="pmRef" placeholder='e.g. 1CB, 2CB  — or  "—" if none'>
+    </div>
+    <div class="modal-field">
+      <label>Category</label>
+      <input type="text" id="pmCat" placeholder='e.g. Circuit Breaker, Relay…' list="catList" autocomplete="off">
+      <datalist id="catList"></datalist>
+    </div>
+    <div class="modal-field">
+      <label>Description</label>
+      <input type="text" id="pmDesc" placeholder='e.g. A-B 3-Pole Circuit Breaker 40A'>
+    </div>
+    <div class="modal-field">
+      <label>Part Number</label>
+      <input type="text" id="pmPn" class="mono" placeholder='e.g. 1492-SP3C400  — or  "Not listed"'>
+    </div>
+    <div class="modal-btns">
+      <button class="mbtn mbtn-secondary" onclick="closePartModal()">Cancel</button>
+      <button class="mbtn mbtn-primary" onclick="savePartModal()">Save Part</button>
+    </div>
+  </div>
+</div>
+
+<!-- PIN / Save / Restore Modal -->
+<div class="modal-overlay" id="pinModal" onclick="if(event.target===this)closePinModal()">
+  <div class="modal-box">
+    <div class="modal-title" id="pinModalTitle">Save Your Changes</div>
+    <p class="modal-desc" id="pinModalDesc">Enter your PIN to save. Any PIN you choose creates your own personal account.<br>Enter the <strong>master PIN</strong> to update the list for everyone.</p>
+    <div class="modal-field" id="pinFieldWrap">
+      <label>PIN</label>
+      <input type="password" id="pinInput" placeholder="Enter your PIN" autocomplete="current-password">
+    </div>
+    <p class="modal-hint" id="pinModalHint">Don't have a PIN yet? Just pick one — it will create your account automatically.</p>
+    <hr class="modal-divider">
+    <div class="modal-btns">
+      <button class="mbtn mbtn-secondary" onclick="closePinModal()">Cancel</button>
+      <button class="mbtn mbtn-primary" id="pinModalAction" onclick="executePinAction()">Save</button>
+    </div>
+  </div>
+</div>
 
 <!-- Coming Soon Screen -->
 <div class="coming-soon" id="comingSoon">
@@ -547,6 +721,10 @@
     </div>
   </div>
 </div>
+
+<!-- Firebase SDK (compat, works in plain HTML with no build step) -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 
 <script>
 // ── DATA ──────────────────────────────────────────────────────────────────────
@@ -992,9 +1170,18 @@ function sortTable(col) {
 function render() {
   const q = document.getElementById("search").value.toLowerCase();
   const terms = expandQuery(q);
-  const processedData = groupData(data);
+  const workingData = getWorkingData();
 
-  let rows = processedData.filter(r => {
+  // In edit mode show raw ungrouped rows so each row maps to a real activeData index.
+  // In normal mode show grouped rows as before.
+  let sourceRows;
+  if (editMode) {
+    sourceRows = workingData.map((r, i) => ({ row: r, origIdx: i }));
+  } else {
+    sourceRows = groupData(workingData).map(r => ({ row: r, origIdx: -1 }));
+  }
+
+  let rows = sourceRows.filter(({ row: r }) => {
     const [ref, cat, desc, pn] = r;
     const haystack = [ref,cat,desc,pn].join(" ").toLowerCase();
     if (q && !terms.some(t => haystack.includes(t))) return false;
@@ -1002,7 +1189,7 @@ function render() {
     return true;
   });
 
-  rows.sort((a,b) => {
+  rows.sort(({ row: a }, { row: b }) => {
     const av = a[sortCol].toLowerCase(), bv = b[sortCol].toLowerCase();
     const aNL = av==="not listed", bNL = bv==="not listed";
     if (aNL && !bNL) return 1;
@@ -1015,15 +1202,26 @@ function render() {
     return sortAsc ? res : -res;
   });
 
-  document.getElementById("tbody").innerHTML = rows.map(r => {
+  document.getElementById("tbody").innerHTML = rows.map(({ row: r, origIdx }) => {
+    const editCols = editMode
+      ? `<td class="edit-cell">
+          <button class="row-edit-btn" onclick="editPart(${origIdx})" title="Edit">✏️</button>
+          <button class="row-del-btn" onclick="deletePart(${origIdx})" title="Delete">🗑️</button>
+        </td>`
+      : "";
     return `<tr>
       <td>${pnHtml(r[3], r[2])}</td>
       <td>${badgeHtml(r[1], r[3])}</td>
       <td>${descHtml(r[2], r[3])}</td>
       <td class="ref-cell">${r[0]}</td>
+      ${editCols}
     </tr>`;
   }).join("");
 
+  const editColHeader = document.getElementById("editColHeader");
+  if (editColHeader) editColHeader.style.display = editMode ? "" : "none";
+
+  const processedData = groupData(workingData);
   document.getElementById("count").textContent = `${rows.length} of ${processedData.length} components`;
   document.getElementById("noResults").style.display = rows.length===0 ? "block" : "none";
 }
@@ -1088,7 +1286,7 @@ async function exportDocx() {
   }
 
   const q = document.getElementById("search").value.toLowerCase();
-  const processedData = groupData(data);
+  const processedData = groupData(getWorkingData());
 
   let rows = processedData.filter(r => {
     const [ref, cat, desc, pn] = r;
@@ -1189,7 +1387,7 @@ async function exportDocx() {
 
 // ── CATEGORY PILLS ───────────────────────────────────────────────────────────
 function buildLegend() {
-  const cats = [...new Set(data.map(r=>r[1]))].sort();
+  const cats = [...new Set(getWorkingData().map(r=>r[1]))].sort();
   const legend = document.getElementById("catLegend");
   const all = document.createElement("span");
   all.className = "cat-pill active";
@@ -1392,6 +1590,256 @@ async function installApp() {
 // ── SERVICE WORKER ────────────────────────────────────────────────────────────
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('./service-worker.js', { scope: '/mustang-parts-list/' });
+}
+
+// ── FIREBASE ──────────────────────────────────────────────────────────────────
+const firebaseConfig = {
+  apiKey: "AIzaSyC7GPRFar0gFswGdJXq_zvT3o6OlPIxCXo",
+  authDomain: "mustang-parts-list.firebaseapp.com",
+  projectId: "mustang-parts-list",
+  storageBucket: "mustang-parts-list.firebasestorage.app",
+  messagingSenderId: "503413299962",
+  appId: "1:503413299962:web:a14956146453f45f250743"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+// ── MASTER PIN ────────────────────────────────────────────────────────────────
+// SHA-256("Colt4828!mustang-parts-v1") — master PIN is: Colt4828!
+const MASTER_PIN_HASH = "b6ae8d337d979b9c0134e4ba4ae3810a2a079ac832d9663c2baf7c974af7210b";
+
+async function hashPin(pin) {
+  const enc = new TextEncoder().encode(pin + "mustang-parts-v1");
+  const buf = await crypto.subtle.digest("SHA-256", enc);
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, "0")).join("");
+}
+
+// ── ACTIVE DATA ────────────────────────────────────────────────────────────────
+let activeData  = null;   // null = use hardcoded master data
+let editMode    = false;
+let unsavedChanges = 0;
+let _pinModalMode  = "save";
+
+function getWorkingData() {
+  return activeData !== null ? activeData : data;
+}
+
+// On load: pull master data from Firebase (if the admin has saved one there)
+(async function loadMasterOnStart() {
+  try {
+    const snap = await db.collection("masterData").doc("current").get();
+    if (snap.exists && Array.isArray(snap.data().parts) && snap.data().parts.length > 0) {
+      activeData = snap.data().parts;
+      buildLegend();
+      render();
+    }
+  } catch (e) { /* silently fall back to hardcoded data */ }
+})();
+
+// ── EDIT MODE TOGGLE ──────────────────────────────────────────────────────────
+function toggleEditMode() {
+  editMode = !editMode;
+  const btn = document.getElementById("editModeBtn");
+  btn.classList.toggle("active", editMode);
+  btn.innerHTML = editMode
+    ? '✏️ Editing<span class="edit-badge" id="editBadge"></span>'
+    : '✏️ Edit<span class="edit-badge" id="editBadge" style="display:none"></span>';
+  document.getElementById("editActions").style.display = editMode ? "flex" : "none";
+
+  // Copy master data into activeData so edits don't mutate the original const
+  if (editMode && activeData === null) {
+    activeData = data.map(r => [...r]);
+  }
+
+  // Populate the category autocomplete list
+  if (editMode) {
+    const cats = [...new Set(getWorkingData().map(r => r[1]))].sort();
+    document.getElementById("catList").innerHTML = cats.map(c => `<option value="${c}">`).join("");
+  }
+
+  updateEditBadge();
+  render();
+}
+
+function updateEditBadge() {
+  const badge = document.getElementById("editBadge");
+  if (!badge) return;
+  badge.textContent = unsavedChanges > 0 ? `${unsavedChanges} unsaved` : "";
+  badge.style.display = unsavedChanges > 0 ? "inline" : "none";
+}
+
+// ── ADD / EDIT / DELETE ───────────────────────────────────────────────────────
+function addPart() { showPartModal(null, -1); }
+
+function editPart(origIdx) {
+  showPartModal(getWorkingData()[origIdx], origIdx);
+}
+
+function deletePart(origIdx) {
+  if (!confirm("Delete this part? Your changes won't be permanent until you Save.")) return;
+  if (activeData === null) activeData = data.map(r => [...r]);
+  activeData.splice(origIdx, 1);
+  unsavedChanges++;
+  updateEditBadge();
+  buildLegend();
+  render();
+}
+
+function showPartModal(part, rowIndex) {
+  document.getElementById("pmRef").value  = part ? part[0] : "";
+  document.getElementById("pmCat").value  = part ? part[1] : "";
+  document.getElementById("pmDesc").value = part ? part[2] : "";
+  document.getElementById("pmPn").value   = part ? part[3] : "";
+  document.getElementById("pmTitle").textContent = rowIndex === -1 ? "Add New Part" : "Edit Part";
+  document.getElementById("partModal")._rowIndex = rowIndex;
+  document.getElementById("partModal").style.display = "flex";
+  setTimeout(() => document.getElementById(rowIndex === -1 ? "pmRef" : "pmDesc").focus(), 60);
+}
+
+function savePartModal() {
+  const ref  = document.getElementById("pmRef").value.trim()  || "—";
+  const cat  = document.getElementById("pmCat").value.trim();
+  const desc = document.getElementById("pmDesc").value.trim();
+  const pn   = document.getElementById("pmPn").value.trim()   || "Not listed";
+  if (!cat)  { alert("Category is required."); return; }
+  if (!desc) { alert("Description is required."); return; }
+  if (activeData === null) activeData = data.map(r => [...r]);
+  const idx = document.getElementById("partModal")._rowIndex;
+  if (idx === -1) {
+    activeData.push([ref, cat, desc, pn]);
+  } else {
+    activeData[idx] = [ref, cat, desc, pn];
+  }
+  unsavedChanges++;
+  updateEditBadge();
+  closePartModal();
+  buildLegend();
+  render();
+}
+
+function closePartModal() {
+  document.getElementById("partModal").style.display = "none";
+}
+
+// ── PIN MODAL ─────────────────────────────────────────────────────────────────
+function openPinModal(mode) {
+  _pinModalMode = mode;
+  const cfg = {
+    save:    {
+      title:  "Save Your Changes",
+      desc:   "Enter your PIN to save. Any PIN you choose creates your personal account.<br>Use the <strong>master PIN</strong> to update the list for everyone.",
+      action: "Save",
+      cls:    "mbtn-primary",
+      showPin: true
+    },
+    restore: {
+      title:  "Restore a Saved List",
+      desc:   "Enter your PIN to load your previously saved parts list.",
+      action: "Restore",
+      cls:    "mbtn-primary",
+      showPin: true
+    },
+    reset: {
+      title:  "Reset to Master List",
+      desc:   "This will discard your current session changes and reload the master list. Nothing in the cloud is deleted.",
+      action: "Reset",
+      cls:    "mbtn-danger",
+      showPin: false
+    }
+  }[mode];
+
+  document.getElementById("pinModalTitle").textContent   = cfg.title;
+  document.getElementById("pinModalDesc").innerHTML      = cfg.desc;
+  document.getElementById("pinModalAction").textContent  = cfg.action;
+  document.getElementById("pinModalAction").className    = "mbtn " + cfg.cls;
+  document.getElementById("pinFieldWrap").style.display  = cfg.showPin ? "" : "none";
+  document.getElementById("pinModalHint").style.display  = cfg.showPin ? "" : "none";
+  document.getElementById("pinInput").value = "";
+  document.getElementById("pinModal").style.display = "flex";
+  if (cfg.showPin) setTimeout(() => document.getElementById("pinInput").focus(), 60);
+}
+
+function closePinModal() {
+  document.getElementById("pinModal").style.display = "none";
+}
+
+async function executePinAction() {
+  if (_pinModalMode === "reset") {
+    activeData = null;
+    unsavedChanges = 0;
+    updateEditBadge();
+    closePinModal();
+    // Try to reload the Firebase master (same as on startup)
+    try {
+      const snap = await db.collection("masterData").doc("current").get();
+      if (snap.exists && Array.isArray(snap.data().parts) && snap.data().parts.length > 0) {
+        activeData = snap.data().parts;
+      }
+    } catch (e) {}
+    buildLegend();
+    render();
+    showToast("↩️ Reset to master list");
+    return;
+  }
+
+  const pin = document.getElementById("pinInput").value.trim();
+  if (!pin) { alert("Please enter a PIN."); return; }
+
+  const actionBtn = document.getElementById("pinModalAction");
+  actionBtn.textContent = "Working…";
+  actionBtn.disabled = true;
+
+  try {
+    if (_pinModalMode === "save")    await saveParts(pin);
+    else                             await restoreParts(pin);
+    closePinModal();
+  } finally {
+    actionBtn.textContent = _pinModalMode === "save" ? "Save" : "Restore";
+    actionBtn.disabled = false;
+  }
+}
+
+// ── FIREBASE SAVE / RESTORE ───────────────────────────────────────────────────
+async function saveParts(pin) {
+  const hash     = await hashPin(pin);
+  const isMaster = hash === MASTER_PIN_HASH;
+  const parts    = getWorkingData();
+  try {
+    const ref = isMaster
+      ? db.collection("masterData").doc("current")
+      : db.collection("userSaves").doc(hash);
+    await ref.set({ parts, savedAt: firebase.firestore.FieldValue.serverTimestamp() });
+    unsavedChanges = 0;
+    updateEditBadge();
+    showToast(isMaster
+      ? "✅ Saved as master — everyone will see your changes"
+      : "✅ Saved to your personal account");
+  } catch (e) {
+    showToast("⚠️ Save failed — check your connection");
+  }
+}
+
+async function restoreParts(pin) {
+  const hash     = await hashPin(pin);
+  const isMaster = hash === MASTER_PIN_HASH;
+  try {
+    const ref  = isMaster
+      ? db.collection("masterData").doc("current")
+      : db.collection("userSaves").doc(hash);
+    const snap = await ref.get();
+    if (snap.exists && Array.isArray(snap.data().parts) && snap.data().parts.length > 0) {
+      activeData = snap.data().parts;
+      unsavedChanges = 0;
+      updateEditBadge();
+      buildLegend();
+      render();
+      showToast("✅ Parts list restored");
+    } else {
+      showToast("⚠️ No saved data found for that PIN");
+    }
+  } catch (e) {
+    showToast("⚠️ Restore failed — check your connection");
+  }
 }
 
 </script>
