@@ -1141,6 +1141,10 @@ function groupData(rows) {
 // ── STATE ────────────────────────────────────────────────────────────────────
 let sortCol = 3, sortAsc = true;
 let filterCat = "";
+let activeData  = null;   // null = use hardcoded master data
+let editMode    = false;
+let unsavedChanges = 0;
+let _pinModalMode  = "save";
 
 // ── SORT ─────────────────────────────────────────────────────────────────────
 function naturalSort(a, b) {
@@ -1613,12 +1617,6 @@ async function hashPin(pin) {
   const buf = await crypto.subtle.digest("SHA-256", enc);
   return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, "0")).join("");
 }
-
-// ── ACTIVE DATA ────────────────────────────────────────────────────────────────
-let activeData  = null;   // null = use hardcoded master data
-let editMode    = false;
-let unsavedChanges = 0;
-let _pinModalMode  = "save";
 
 function getWorkingData() {
   return activeData !== null ? activeData : data;
