@@ -17,14 +17,14 @@
 <meta property="og:title"        content="Parts Tracker">
 <meta property="og:description"  content="Quick parts reference for the shop floor.">
 <meta property="og:url"          content="https://nlt42886.github.io/mustang-parts-list/">
-<meta property="og:image"        content="https://nlt42886.github.io/mustang-parts-list/icons/icon.svg">
-<meta property="og:image:type"  content="image/svg+xml">
+<meta property="og:image"        content="https://nlt42886.github.io/mustang-parts-list/icons/icon-512x512.png">
+<meta property="og:image:type"  content="image/png">
 <meta property="og:image:width"  content="512">
 <meta property="og:image:height" content="512">
 <meta name="twitter:card"        content="summary">
 <meta name="twitter:title"       content="Parts Tracker">
 <meta name="twitter:description" content="Quick parts reference for the shop floor.">
-<meta name="twitter:image"       content="https://nlt42886.github.io/mustang-parts-list/icons/icon.svg">
+<meta name="twitter:image"       content="https://nlt42886.github.io/mustang-parts-list/icons/icon-512x512.png">
 <title>Mustang Parts List</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
@@ -496,7 +496,7 @@
   </div>
   <div class="export-row">
     <button class="export-btn" id="installBtn" style="display:none" onclick="installApp()">📲 Install App</button>
-    <button class="export-btn" onclick="exportCSV()">📄 Export Word Doc</button>
+    <button class="export-btn" onclick="exportDocx()">📄 Export Word Doc</button>
     <button class="export-btn" onclick="window.print()">🖨️ Print</button>
     <button class="export-btn" onclick="shareApp()">📤 Share</button>
     <button class="export-btn update-btn" onclick="checkForUpdates()" title="Check for Updates">⟳</button>
@@ -570,7 +570,7 @@ const data = [
   ["—",                   "Circuit Breaker", "A-B 1-Pole Circuit Breaker 40A",                      "1492-SP1C400"],
   ["—",                   "Circuit Breaker", "A-B 1-Pole Circuit Breaker 5A",                       "1492-SP1D050"],
   ["—",                   "Circuit Breaker", "A-B 2-Pole Circuit Breaker 5A",                       "1492-SP2D050"],
-  ["—",                   "Circuit Breaker", "A-B 2-Pole Circuit Breaker 20A",                      "1492-SP1D200"],
+  ["—",                   "Circuit Breaker", "A-B 1-Pole Circuit Breaker 20A",                      "1492-SP1D200"],
   ["—",                   "Circuit Breaker", "A-B Manual Motor Starter",                             "140-CMN6300"],
 
   // ── CONTACTORS ────────────────────────────────────────────────────────────
@@ -673,7 +673,7 @@ const data = [
   ["—",                   "Gauge / Sensor",  "Schmersal Coded Magnet for Chamber Door",               "BPS 260-1"],
   ["—",                   "Gauge / Sensor",  "Schmersal Cable for Chamber Door Switch",               "A-K6P-M8-R-G-10M-GY-1-X-A-4"],
   ["—",                   "Gauge / Sensor",  "Float Level Switch — Monomer Supply Tank",              "LS1750"],
-  ["—",                   "Gauge / Sensor",  "Float Switch (Double for Monomer Reservoir)",           "LS800-3-SS--SPDT-20-GR"],
+  ["—",                   "Gauge / Sensor",  "Float Switch (Double for Monomer Reservoir)",           "LS800-3-SS-SPDT-20-GR"],
   ["—",                   "Gauge / Sensor",  "Omron 12MM Prox Extended Barrel (Fixture Rotation)",    "E2E2-X5MB1-M1"],
   ["—",                   "Gauge / Sensor",  "NW16 O-Ring for Convector Gauge Clamps (x2)",           "MVSNW16CR"],
   ["—",                   "Gauge / Sensor",  "NW40 O-Ring for Ion Gauge Clamps (x2)",                 "MVSNW40CR"],
@@ -888,59 +888,6 @@ function copyPn(pn) {
 }
 
 // ── Build clickable description ───────────────────────────────────────────────
-// Known manufacturer/brand names to extract from descriptions
-const mfgNames = [
-  "A-B","Allen-Bradley","Phoenix","Sola","Advantech","Parker","SSD","Eurotherm",
-  "Advanced Energy","AE","Dart","TRUMPF","Hüttinger","Huttinger","TruPlasma",
-  "Acme","Powertran","MKS","Eyesys","ConvecTorr","Granville Phillips","Stabil",
-  "Omega","Leybold","Inficon","Schmersal","Omron","Watlow","Wago",
-  "Edwards","Oerlikon","Stokes","Polycold","Baldor","SMC","Dayton","Magnatrol",
-  "Watts","Wilkerson","Hoffman","Turck","Mitsubishi","Copley","LS Electric",
-  "TRD","Gems"
-];
-
-// Model/series identifiers to look for
-const modelPatterns = /\b(SLC\s*5\/05|690\+|PE\s*II\s*10K|DC\s*3030|1100\s*HC|FV105-T|PS113A|MMS-32H|CMS-32H|FHA-17C|1150C|1179A|275|347D|Series\s*\d+|Type\s*K)\b/gi;
-
-function extractSearchKeywords(desc, pn) {
-  let keywords = [];
-  
-  // Add part number if valid
-  if (pn && pn !== "Not listed" && pn !== "—") {
-    keywords.push(pn);
-  }
-  
-  // Find manufacturer names in description
-  for (const mfg of mfgNames) {
-    if (desc.toLowerCase().includes(mfg.toLowerCase())) {
-      keywords.push(mfg);
-      break; // One manufacturer is enough
-    }
-  }
-  
-  // Find model/series numbers
-  const modelMatch = desc.match(modelPatterns);
-  if (modelMatch) {
-    keywords.push(modelMatch[0]);
-  }
-  
-  // If we still only have the PN, grab the first 3-4 meaningful words
-  if (keywords.length <= 1) {
-    const cleaned = desc
-      .replace(/\(.*?\)/g, '')           // Remove parentheticals
-      .replace(/—.*/, '')                 // Remove everything after em dash
-      .replace(/\b(x\d+)\b/gi, '')       // Remove quantity markers
-      .replace(/\b(Slot\s*\d+|D\d+\/\d+)\b/gi, '') // Remove slot refs
-      .replace(/\b\d+["']\b/g, '')       // Remove dimensions like 6" 54"
-      .replace(/\b(for|the|on|in|with|and|or|to)\b/gi, '') // Remove filler words
-      .trim();
-    const words = cleaned.split(/\s+/).filter(w => w.length > 1).slice(0, 4);
-    keywords.push(...words);
-  }
-  
-  return keywords.join(' ');
-}
-
 function descHtml(desc, pn) {
   const searchText = (pn && pn !== "Not listed" && pn !== "—") ? `${pn} ${desc}` : desc;
   const q = encodeURIComponent(searchText);
@@ -1060,8 +1007,7 @@ function render() {
     const aNL = av==="not listed", bNL = bv==="not listed";
     if (aNL && !bNL) return 1;
     if (!aNL && bNL) return -1;
-    // Always push — schematic refs to bottom regardless of sort direction
-    const aDash = a[0] === "—", bDash = b[0] === "—";
+    const aDash = av === "—", bDash = bv === "—";
     if (aDash && !bDash) return 1;
     if (!aDash && bDash) return -1;
     // Use simple localeCompare for category (pure text, no numbers)
@@ -1133,7 +1079,7 @@ function loadDocxLib() {
   return Promise.resolve();
 }
 
-async function exportCSV() {
+async function exportDocx() {
   try {
     await loadDocxLib();
   } catch(e) {
