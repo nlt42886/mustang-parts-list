@@ -1,22 +1,16 @@
 {
-  "name": "Mustang Parts List",
-  "short_name": "MVS Parts",
+  "name": "Parts Tracker",
+  "short_name": "Parts Tracker",
   "description": "Colt 48 / Colt 4828 — Electrical & Mechanical Parts Reference",
   "id": "/mustang-parts-list/",
   "scope": "/mustang-parts-list/",
   "start_url": "/mustang-parts-list/index.html",
   "display": "standalone",
-  "background_color": "#f0f2f5",
+  "background_color": "#1F3864",
   "theme_color": "#1F3864",
   "orientation": "any",
   "prefer_related_applications": false,
   "icons": [
-    {
-      "src": "icons/icon.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
-      "purpose": "any maskable"
-    },
     {
       "src": "icons/icon-96x96.png",
       "sizes": "96x96",

@@ -7,24 +7,21 @@
 <meta name="theme-color" content="#1F3864">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
-<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
-<link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16.png">
-<link rel="shortcut icon" href="icons/favicon.ico">
+<link rel="apple-touch-icon" href="icons/icon-192x192.png">
 <!-- Open Graph / share card -->
 <meta property="og:type"         content="website">
-<meta property="og:site_name"    content="Parts Tracker">
-<meta property="og:title"        content="Parts Tracker">
-<meta property="og:description"  content="Quick parts reference for the shop floor.">
+<meta property="og:site_name"    content="Mustang Vacuum Systems">
+<meta property="og:title"        content="Mustang Parts List">
+<meta property="og:description"  content="Colt 48 / Colt 4828 — Electrical &amp; Mechanical Parts Reference">
 <meta property="og:url"          content="https://nlt42886.github.io/mustang-parts-list/">
-<meta property="og:image"        content="https://nlt42886.github.io/mustang-parts-list/icons/icon-512x512.png">
-<meta property="og:image:type"  content="image/png">
+<meta property="og:image"        content="https://nlt42886.github.io/mustang-parts-list/icons/icon.svg">
+<meta property="og:image:type"  content="image/svg+xml">
 <meta property="og:image:width"  content="512">
 <meta property="og:image:height" content="512">
 <meta name="twitter:card"        content="summary">
-<meta name="twitter:title"       content="Parts Tracker">
-<meta name="twitter:description" content="Quick parts reference for the shop floor.">
-<meta name="twitter:image"       content="https://nlt42886.github.io/mustang-parts-list/icons/icon-512x512.png">
+<meta name="twitter:title"       content="Mustang Parts List">
+<meta name="twitter:description" content="Colt 48 / Colt 4828 — Electrical &amp; Mechanical Parts Reference">
+<meta name="twitter:image"       content="https://nlt42886.github.io/mustang-parts-list/icons/icon.svg">
 <title>Mustang Parts List</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
@@ -39,27 +36,13 @@
   }
 
   .header {
-    background: linear-gradient(135deg, #1F3864 0%, #2a3f6f 100%);
+    background: linear-gradient(135deg, #1F3864 0%, #2E74B5 100%);
     padding: 28px 24px 24px;
     text-align: center;
     box-shadow: 0 4px 20px rgba(31,56,100,0.3);
   }
-  .header-inner {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 16px;
-    margin-bottom: 6px;
-  }
-  .header-logo {
-    width: 54px;
-    height: 54px;
-    border-radius: 12px;
-    flex-shrink: 0;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-  }
-  .header h1 { color:#fff; font-size:26px; font-weight:700; letter-spacing:2px; margin-bottom:0; }
-  .header p  { color:#D6E0F5; font-size:14px; }
+  .header h1 { color:#fff; font-size:26px; font-weight:700; letter-spacing:2px; margin-bottom:4px; }
+  .header p  { color:#D6E4F0; font-size:14px; }
 
   .controls-wrap {
     max-width: 1080px;
@@ -70,36 +53,20 @@
     gap: 8px;
   }
 
-  .search-row { display:flex; gap:8px; align-items:center; }
+  .search-row { display:flex; gap:10px; align-items:center; }
 
   .search-box { flex:1; position:relative; }
   .search-box input {
     width:100%; padding:10px 14px 10px 38px;
-    border:2px solid #D6E0F5; border-radius:8px;
+    border:2px solid #D6E4F0; border-radius:8px;
     font-family:inherit; font-size:14px; outline:none;
     transition:border-color 0.2s; background:#fff;
   }
-  .search-box input:focus { border-color:#1A3FC1; }
+  .search-box input:focus { border-color:#2E74B5; }
   .search-box::before {
     content:"🔍"; position:absolute; left:12px; top:50%;
     transform:translateY(-50%); font-size:14px; opacity:0.5;
   }
-
-  .search-btn {
-    flex-shrink: 0;
-    padding: 10px 16px;
-    background: #1A3FC1;
-    color: #fff;
-    border: none;
-    border-radius: 8px;
-    font-family: inherit;
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background 0.15s;
-    white-space: nowrap;
-  }
-  .search-btn:hover { background: #0F2E9A; }
 
   /* Export buttons */
   .export-row {
@@ -110,7 +77,7 @@
   }
   .export-btn {
     padding: 8px 14px;
-    border: 2px solid #D6E0F5;
+    border: 2px solid #D6E4F0;
     border-radius: 8px;
     background: #fff;
     font-family: inherit;
@@ -122,11 +89,6 @@
     display: flex;
     align-items: center;
     gap: 6px;
-  }
-  .update-btn {
-    font-size: 20px;
-    padding: 6px 11px;
-    line-height: 1;
   }
   .export-btn:hover {
     background: #1F3864;
@@ -145,156 +107,14 @@
     padding: 1px 2px;
     margin: -1px -2px;
     transition: background 0.12s, color 0.12s;
-    word-wrap: break-word;
-    overflow-wrap: break-word;
   }
   .desc-link:hover {
-    background: #1A3FC1;
+    background: #2E74B5;
     color: #fff;
     text-decoration: none;
   }
 
-  /* Install popup */
-  .install-popup-overlay {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.55);
-    z-index: 9999;
-    align-items: flex-end;
-    justify-content: center;
-    padding: 20px;
-  }
-  .install-popup {
-    background: #fff;
-    border-radius: 16px;
-    padding: 24px 20px 20px;
-    max-width: 420px;
-    width: 100%;
-    box-shadow: 0 8px 40px rgba(0,0,0,0.3);
-    text-align: center;
-  }
-  .install-popup img {
-    width: 72px;
-    height: 72px;
-    border-radius: 16px;
-    margin-bottom: 14px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.15);
-  }
-  .install-popup h2 {
-    font-size: 18px;
-    font-weight: 700;
-    color: #1F3864;
-    margin-bottom: 8px;
-  }
-  .install-popup p {
-    font-size: 14px;
-    color: #555;
-    margin-bottom: 20px;
-    line-height: 1.5;
-  }
-  .install-popup-btns {
-    display: flex;
-    gap: 10px;
-  }
-  .install-popup-btns button {
-    flex: 1;
-    padding: 12px;
-    border-radius: 10px;
-    font-family: inherit;
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-    border: none;
-    transition: all 0.15s;
-  }
-  .btn-install {
-    background: #1F3864;
-    color: #fff;
-  }
-  .btn-install:hover { background: #1A3FC1; }
-  .btn-dismiss {
-    background: #f0f2f5;
-    color: #666;
-  }
-  .btn-dismiss:hover { background: #e0e3e8; }
-  /* ── MACHINE TABS ── */
-  .machine-tabs {
-    display: flex;
-    justify-content: center;
-    gap: 6px;
-    margin-top: 16px;
-    flex-wrap: wrap;
-  }
-  .machine-tab {
-    padding: 7px 18px;
-    border-radius: 20px;
-    border: 2px solid rgba(255,255,255,0.3);
-    background: rgba(255,255,255,0.1);
-    color: rgba(255,255,255,0.7);
-    font-family: inherit;
-    font-size: 13px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.15s;
-    letter-spacing: 0.5px;
-  }
-  .machine-tab:hover {
-    background: rgba(255,255,255,0.2);
-    color: #fff;
-    border-color: rgba(255,255,255,0.6);
-  }
-  .machine-tab.active {
-    background: #fff;
-    color: #1F3864;
-    border-color: #fff;
-  }
-
-  /* ── MACHINE SUBTABS ── */
-  .machine-subtabs {
-    display: flex;
-    justify-content: center;
-    gap: 5px;
-    margin-top: 8px;
-    flex-wrap: wrap;
-  }
-  .machine-subtab {
-    padding: 4px 13px;
-    border-radius: 14px;
-    border: 1.5px solid rgba(255,255,255,0.25);
-    background: rgba(255,255,255,0.08);
-    color: rgba(255,255,255,0.6);
-    font-family: inherit;
-    font-size: 12px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.15s;
-    letter-spacing: 0.4px;
-  }
-  .machine-subtab:hover {
-    background: rgba(255,255,255,0.18);
-    color: #fff;
-    border-color: rgba(255,255,255,0.5);
-  }
-  .machine-subtab.active {
-    background: rgba(255,255,255,0.25);
-    color: #fff;
-    border-color: #fff;
-  }
-
-  /* ── COMING SOON SCREEN ── */
-  .coming-soon {
-    display: none;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 80px 24px;
-    text-align: center;
-  }
-  .coming-soon .cs-icon { font-size: 64px; margin-bottom: 20px; }
-  .coming-soon h2 { font-size: 24px; font-weight: 700; color: #1F3864; margin-bottom: 10px; }
-  .coming-soon p { font-size: 15px; color: #666; max-width: 300px; line-height: 1.6; }
-
+  /* Category pills legend */
   .cat-legend {
     max-width: 1080px;
     margin: 10px auto 0;
@@ -315,7 +135,7 @@
     user-select: none;
   }
   .cat-pill:hover { filter: brightness(0.9); }
-  .cat-pill.active { border-color: #1A3FC1; transform: scale(1.05); }
+  .cat-pill.active { border-color: #1F3864; transform: scale(1.05); }
 
   .table-scroll-outer {
     margin: 12px 16px 40px;
@@ -335,7 +155,7 @@
   /* Column widths */
   tbody td:nth-child(1), thead th:nth-child(1) { width: 125px; min-width: 125px; max-width: 125px; } /* Part Number */
   tbody td:nth-child(2), thead th:nth-child(2) { width: 100px; min-width: 100px; max-width: 100px; } /* Category */
-  tbody td:nth-child(3), thead th:nth-child(3) { width: 190px; min-width: 190px; padding-left: 24px !important; } /* Description */
+  tbody td:nth-child(3), thead th:nth-child(3) { width: 170px; min-width: 170px; max-width: 170px; padding-left: 24px !important; } /* Description */
   tbody td:nth-child(4), thead th:nth-child(4) { width: 140px; min-width: 140px; } /* Schematic */
 
   table {
@@ -354,7 +174,7 @@
     cursor:pointer; user-select:none;
     transition:background 0.2s;
   }
-  thead th:hover { background:#0F2E9A; }
+  thead th:hover { background:#2a4a7a; }
   thead th .sort-arrow { display:inline-block; margin-left:5px; font-size:10px; opacity:0.4; }
   thead th.sorted .sort-arrow { opacity:1; }
 
@@ -362,11 +182,11 @@
   tbody tr { transition:background 0.12s; }
   tbody tr:nth-child(odd)  { background:#fff; }
   tbody tr:nth-child(even) { background:#f7f8fa; }
-  tbody tr:hover { background:#D6E0F5 !important; }
+  tbody tr:hover { background:#D6E4F0 !important; }
 
   tbody td {
     padding: 7px 8px;
-    font-size: 15px;
+    font-size: 13px;
     border-bottom: 1px solid #e8ecf0;
     vertical-align: middle;
   }
@@ -389,7 +209,7 @@
   /* Clickable part number */
   .pn-link {
     font-family:'IBM Plex Mono', monospace;
-    color:#1A3FC1;
+    color:#2E74B5;
     font-weight:500;
     font-size:12px;
     text-decoration: none;
@@ -399,7 +219,7 @@
     display: inline-block;
   }
   .pn-link:hover {
-    background: #1A3FC1;
+    background: #2E74B5;
     color: #fff;
     text-decoration: none;
   }
@@ -410,7 +230,7 @@
     font-size: 12px;
     margin-top: 3px;
     padding-left: 10px;
-    border-left: 2px solid #D6E0F5;
+    border-left: 2px solid #D6E4F0;
   }
 
   .no-results { text-align:center; padding:40px; color:#999; font-size:15px; }
@@ -418,8 +238,8 @@
     max-width: 1080px;
     margin: 10px auto 4px;
     padding: 8px 16px;
-    background: #D6E0F5;
-    border-left: 4px solid #1A3FC1;
+    background: #D6E4F0;
+    border-left: 4px solid #2E74B5;
     border-radius: 6px;
     font-size: 12px;
     color: #1F3864;
@@ -467,39 +287,22 @@
 <body>
 
 <div class="header">
-  <div class="header-inner">
-    <img src="icons/icon-512x512.png" class="header-logo" alt="Logo">
-    <h1 id="machineTitle">MUSTANG VACUUM SYSTEMS</h1>
-  </div>
-  <p id="machineSubtitle">Parts &amp; Components Reference</p>
-  <div class="machine-tabs" id="mainTabs">
-    <button class="machine-tab active" onclick="selectMachineGroup('mustang', this)">Mustang</button>
-    <button class="machine-tab" onclick="selectMachineGroup('vti', this)">VTI 4</button>
-    <button class="machine-tab" onclick="selectMachineGroup('pmma', this)">PMMA Antihaze</button>
-  </div>
-  <div class="machine-subtabs" id="mustangSubtabs">
-    <button class="machine-subtab active" onclick="selectMachine('mustang_aopm3', this)">AOPM 3</button>
-    <button class="machine-subtab" onclick="selectMachine('mustang_aopm6', this)">AOPM 6</button>
-    <button class="machine-subtab" onclick="selectMachine('mustang_aopm7', this)">AOPM 7</button>
-    <button class="machine-subtab" onclick="selectMachine('mustang_mopm3', this)">MOPM 3</button>
-    <button class="machine-subtab" onclick="selectMachine('mustang_mopm5', this)">MOPM 5</button>
-  </div>
+  <h1>MUSTANG VACUUM SYSTEMS — PARTS LIST</h1>
+  <p>Colt 48 / Colt® 4828 &nbsp;·&nbsp; Electrical &amp; Mechanical Components</p>
 </div>
 
-<div id="partsUI">
 <div class="controls-wrap">
   <div class="search-row">
     <div class="search-box">
-      <input type="text" id="search" placeholder="Search by reference, description, or part number…" inputmode="search" enterkeyhint="search">
+      <input type="text" id="search" placeholder="Search by reference, description, or part number…">
     </div>
-    <button class="search-btn" onclick="doSearch()">Search</button>
   </div>
   <div class="export-row">
     <button class="export-btn" id="installBtn" style="display:none" onclick="installApp()">📲 Install App</button>
-    <button class="export-btn" onclick="exportDocx()">📄 Export Word Doc</button>
+    <button class="export-btn" onclick="exportCSV()">📄 Export Word Doc</button>
     <button class="export-btn" onclick="window.print()">🖨️ Print</button>
     <button class="export-btn" onclick="shareApp()">📤 Share</button>
-    <button class="export-btn update-btn" onclick="checkForUpdates()" title="Check for Updates">⟳</button>
+    <button class="export-btn" onclick="checkForUpdates()">🔄 Check for Updates</button>
     <span class="count" id="count"></span>
   </div>
 </div>
@@ -526,28 +329,6 @@
   <div class="no-results" id="noResults" style="display:none;">No matching components found.</div>
 </div></div>
 
-</div><!-- end partsUI -->
-
-<!-- Coming Soon Screen -->
-<div class="coming-soon" id="comingSoon">
-  <div class="cs-icon">🔧</div>
-  <h2 id="comingSoonTitle">Coming Soon</h2>
-  <p id="comingSoonText">Parts list for this machine is currently being built. Check back soon.</p>
-</div>
-
-<!-- Install Popup -->
-<div class="install-popup-overlay" id="installPopup">
-  <div class="install-popup">
-    <img src="icons/icon-512x512.png" alt="App Icon">
-    <h2>Install Parts Tracker</h2>
-    <p>Add this app to your home screen for quick access — works offline too.</p>
-    <div class="install-popup-btns">
-      <button class="btn-install" onclick="installApp()">📲 Install</button>
-      <button class="btn-dismiss" onclick="dismissInstall()">Not Now</button>
-    </div>
-  </div>
-</div>
-
 <script>
 // ── DATA ──────────────────────────────────────────────────────────────────────
 // [schematic_ref, category, description, part_number]
@@ -570,7 +351,7 @@ const data = [
   ["—",                   "Circuit Breaker", "A-B 1-Pole Circuit Breaker 40A",                      "1492-SP1C400"],
   ["—",                   "Circuit Breaker", "A-B 1-Pole Circuit Breaker 5A",                       "1492-SP1D050"],
   ["—",                   "Circuit Breaker", "A-B 2-Pole Circuit Breaker 5A",                       "1492-SP2D050"],
-  ["—",                   "Circuit Breaker", "A-B 1-Pole Circuit Breaker 20A",                      "1492-SP1D200"],
+  ["—",                   "Circuit Breaker", "A-B 2-Pole Circuit Breaker 20A",                      "1492-SP1D200"],
   ["—",                   "Circuit Breaker", "A-B Manual Motor Starter",                             "140-CMN6300"],
 
   // ── CONTACTORS ────────────────────────────────────────────────────────────
@@ -673,7 +454,7 @@ const data = [
   ["—",                   "Gauge / Sensor",  "Schmersal Coded Magnet for Chamber Door",               "BPS 260-1"],
   ["—",                   "Gauge / Sensor",  "Schmersal Cable for Chamber Door Switch",               "A-K6P-M8-R-G-10M-GY-1-X-A-4"],
   ["—",                   "Gauge / Sensor",  "Float Level Switch — Monomer Supply Tank",              "LS1750"],
-  ["—",                   "Gauge / Sensor",  "Float Switch (Double for Monomer Reservoir)",           "LS800-3-SS-SPDT-20-GR"],
+  ["—",                   "Gauge / Sensor",  "Float Switch (Double for Monomer Reservoir)",           "LS800-3-SS--SPDT-20-GR"],
   ["—",                   "Gauge / Sensor",  "Omron 12MM Prox Extended Barrel (Fixture Rotation)",    "E2E2-X5MB1-M1"],
   ["—",                   "Gauge / Sensor",  "NW16 O-Ring for Convector Gauge Clamps (x2)",           "MVSNW16CR"],
   ["—",                   "Gauge / Sensor",  "NW40 O-Ring for Ion Gauge Clamps (x2)",                 "MVSNW40CR"],
@@ -876,20 +657,67 @@ const catStyles = {
   "Miscellaneous":     { bg:"#F9FAFB", color:"#6B7280" },
 };
 
-function badgeHtml(cat, pn) {
+function badgeHtml(cat) {
   const s = catStyles[cat] || { bg:"#F3F4F6", color:"#374151" };
-  const safePn = (pn || '').replace(/'/g, "\'");
-  return `<span class="cat-badge" style="background:${s.bg};color:${s.color};cursor:pointer" onclick="copyPn('${safePn}')" title="Tap to copy part number">${cat}</span>`;
-}
-
-function copyPn(pn) {
-  if (!pn || pn === 'Not listed' || pn === '—') { showToast('No part number to copy'); return; }
-  navigator.clipboard.writeText(pn).then(() => showToast('📋 Copied: ' + pn)).catch(() => showToast('Could not copy'));
+  return `<span class="cat-badge" style="background:${s.bg};color:${s.color}">${cat}</span>`;
 }
 
 // ── Build clickable description ───────────────────────────────────────────────
+// Known manufacturer/brand names to extract from descriptions
+const mfgNames = [
+  "A-B","Allen-Bradley","Phoenix","Sola","Advantech","Parker","SSD","Eurotherm",
+  "Advanced Energy","AE","Dart","TRUMPF","Hüttinger","Huttinger","TruPlasma",
+  "Acme","Powertran","MKS","Eyesys","ConvecTorr","Granville Phillips","Stabil",
+  "Omega","Leybold","Inficon","Schmersal","Omron","Watlow","Wago",
+  "Edwards","Oerlikon","Stokes","Polycold","Baldor","SMC","Dayton","Magnatrol",
+  "Watts","Wilkerson","Hoffman","Turck","Mitsubishi","Copley","LS Electric",
+  "TRD","Gems"
+];
+
+// Model/series identifiers to look for
+const modelPatterns = /\b(SLC\s*5\/05|690\+|PE\s*II\s*10K|DC\s*3030|1100\s*HC|FV105-T|PS113A|MMS-32H|CMS-32H|FHA-17C|1150C|1179A|275|347D|Series\s*\d+|Type\s*K)\b/gi;
+
+function extractSearchKeywords(desc, pn) {
+  let keywords = [];
+  
+  // Add part number if valid
+  if (pn && pn !== "Not listed" && pn !== "—") {
+    keywords.push(pn);
+  }
+  
+  // Find manufacturer names in description
+  for (const mfg of mfgNames) {
+    if (desc.toLowerCase().includes(mfg.toLowerCase())) {
+      keywords.push(mfg);
+      break; // One manufacturer is enough
+    }
+  }
+  
+  // Find model/series numbers
+  const modelMatch = desc.match(modelPatterns);
+  if (modelMatch) {
+    keywords.push(modelMatch[0]);
+  }
+  
+  // If we still only have the PN, grab the first 3-4 meaningful words
+  if (keywords.length <= 1) {
+    const cleaned = desc
+      .replace(/\(.*?\)/g, '')           // Remove parentheticals
+      .replace(/—.*/, '')                 // Remove everything after em dash
+      .replace(/\b(x\d+)\b/gi, '')       // Remove quantity markers
+      .replace(/\b(Slot\s*\d+|D\d+\/\d+)\b/gi, '') // Remove slot refs
+      .replace(/\b\d+["']\b/g, '')       // Remove dimensions like 6" 54"
+      .replace(/\b(for|the|on|in|with|and|or|to)\b/gi, '') // Remove filler words
+      .trim();
+    const words = cleaned.split(/\s+/).filter(w => w.length > 1).slice(0, 4);
+    keywords.push(...words);
+  }
+  
+  return keywords.join(' ');
+}
+
 function descHtml(desc, pn) {
-  const searchText = (pn && pn !== "Not listed" && pn !== "—") ? `${pn} ${desc}` : desc;
+  const searchText = extractSearchKeywords(desc, pn);
   const q = encodeURIComponent(searchText);
   return `<a class="desc-link" href="https://www.google.com/search?q=${q}" target="_blank">${desc}</a>`;
 }
@@ -907,23 +735,6 @@ function pnHtml(pn, desc) {
 // Groups rows with same PN into one row, EXCEPT PLC / Network stays expanded
 // Uses first description only, merges all schematic refs
 function groupData(rows) {
-  // When sorted by schematic ref, split all grouped refs into individual rows
-  if (sortCol === 0) {
-    const expanded = [];
-    for (const row of rows) {
-      const [ref, cat, desc, pn] = row;
-      const refs = ref.split(',').map(r => r.trim()).filter(r => r);
-      if (refs.length <= 1) {
-        expanded.push([...row]);
-      } else {
-        for (const r of refs) {
-          expanded.push([r, cat, desc, pn]);
-        }
-      }
-    }
-    return expanded;
-  }
-
   const grouped = [];
   const pnMap = new Map();
 
@@ -991,13 +802,11 @@ function sortTable(col) {
 // ── RENDER ───────────────────────────────────────────────────────────────────
 function render() {
   const q = document.getElementById("search").value.toLowerCase();
-  const terms = expandQuery(q);
   const processedData = groupData(data);
 
   let rows = processedData.filter(r => {
     const [ref, cat, desc, pn] = r;
-    const haystack = [ref,cat,desc,pn].join(" ").toLowerCase();
-    if (q && !terms.some(t => haystack.includes(t))) return false;
+    if (q && !([ref,cat,desc,pn].join(" ").toLowerCase().includes(q))) return false;
     if (filterCat && cat!==filterCat) return false;
     return true;
   });
@@ -1007,18 +816,17 @@ function render() {
     const aNL = av==="not listed", bNL = bv==="not listed";
     if (aNL && !bNL) return 1;
     if (!aNL && bNL) return -1;
-    const aDash = av === "—", bDash = bv === "—";
+    const aDash = a[0] === "—", bDash = b[0] === "—";
     if (aDash && !bDash) return 1;
     if (!aDash && bDash) return -1;
-    // Use simple localeCompare for category (pure text, no numbers)
-    const res = sortCol === 1 ? av.localeCompare(bv) : naturalSort(av, bv);
+    const res = naturalSort(av, bv);
     return sortAsc ? res : -res;
   });
 
   document.getElementById("tbody").innerHTML = rows.map(r => {
     return `<tr>
       <td>${pnHtml(r[3], r[2])}</td>
-      <td>${badgeHtml(r[1], r[3])}</td>
+      <td>${badgeHtml(r[1])}</td>
       <td>${descHtml(r[2], r[3])}</td>
       <td class="ref-cell">${r[0]}</td>
     </tr>`;
@@ -1028,58 +836,13 @@ function render() {
   document.getElementById("noResults").style.display = rows.length===0 ? "block" : "none";
 }
 
-// ── SEARCH ALIASES ───────────────────────────────────────────────────────────
-const searchAliases = {
-  "allen bradley":   ["a-b", "ab"],
-  "allen-bradley":   ["a-b", "ab"],
-  "rockwell":        ["a-b", "ab"],
-  "rockwell automation": ["a-b", "ab"],
-  "sola electric":   ["sola"],
-  "solahd":          ["sola"],
-  "phoenix contact": ["phoenix"],
-  "parker ssd":      ["parker", "ssd", "eurotherm"],
-  "eurotherm":       ["parker", "ssd", "690+"],
-  "parker hannifin": ["parker", "ssd", "wilkerson"],
-  "huttinger":       ["hüttinger", "huettinger", "trumpf"],
-  "huettinger":      ["hüttinger", "trumpf"],
-  "trumpf":          ["hüttinger", "truplasma"],
-  "acme electric":   ["acme"],
-  "acme transformer":["acme"],
-  "smc pneumatics":  ["smc"],
-  "smc corporation": ["smc"],
-  "leybold":         ["stokes", "oerlikon"],
-  "lsis":            ["ls electric"],
-  "lg industrial":   ["ls electric"],
-};
-
-function expandQuery(q) {
-  if (!q) return [q];
-  let terms = [q];
-  // Check if q is a partial match of any alias or any replacement
-  for (const [alias, replacements] of Object.entries(searchAliases)) {
-    // If what the user typed could be the start of this alias, add all replacements
-    if (alias.startsWith(q) || alias.includes(q)) {
-      terms = terms.concat(replacements);
-      terms.push(alias);
-    }
-    // Also check each replacement word
-    for (const rep of replacements) {
-      if (rep.startsWith(q) || rep.includes(q)) {
-        terms.push(alias);
-        terms = terms.concat(replacements);
-      }
-    }
-  }
-  return [...new Set(terms)];
-}
-
-
+// ── WORD DOC EXPORT ──────────────────────────────────────────────────────────
 // docx library bundled inline — works fully offline
 function loadDocxLib() {
   return Promise.resolve();
 }
 
-async function exportDocx() {
+async function exportCSV() {
   try {
     await loadDocxLib();
   } catch(e) {
@@ -1101,7 +864,7 @@ async function exportDocx() {
           AlignmentType, WidthType, ShadingType, BorderStyle, HeadingLevel,
           VerticalAlign, PageOrientation } = docx;
 
-  const border = { style: BorderStyle.SINGLE, size: 1, color: "D6E0F5" };
+  const border = { style: BorderStyle.SINGLE, size: 1, color: "D6E4F0" };
   const borders = { top: border, bottom: border, left: border, right: border };
   const cellMargins = { top: 60, bottom: 60, left: 100, right: 100 };
 
@@ -1122,7 +885,7 @@ async function exportDocx() {
   const dataRows = rows.map((r, idx) => {
     const fill = idx % 2 === 0 ? "FFFFFF" : "F2F2F2";
     const cellData = [
-      { text: r[3], width: 1800, bold: true, color: r[3] === "Not listed" || r[3] === "—" ? "BBBBBB" : "1A3FC1", font: "Consolas" },
+      { text: r[3], width: 1800, bold: true, color: r[3] === "Not listed" || r[3] === "—" ? "BBBBBB" : "2E74B5", font: "Consolas" },
       { text: r[1], width: 1300, bold: false, color: "333333", font: "Arial" },
       { text: r[2], width: 4800, bold: false, color: "333333", font: "Arial" },
       { text: r[0], width: 2200, bold: true, color: "1F3864", font: "Arial" },
@@ -1221,115 +984,36 @@ function selectPill(el, cat) {
 }
 
 // ── EVENTS ───────────────────────────────────────────────────────────────────
-function doSearch() {
-  render();
-  document.getElementById("search").blur(); // dismiss keyboard
-}
-
 document.getElementById("search").addEventListener("input", render);
-document.getElementById("search").addEventListener("keydown", function(e) {
-  if (e.key === "Enter") doSearch();
-});
-
-// ── MACHINE SELECTOR ────────────────────────────────────────────────────────
-const machines = {
-  mustang_aopm3: { title: 'MUSTANG — AOPM 3', subtitle: 'Parts &amp; Components Reference', comingSoon: false },
-  mustang_aopm6: { title: 'MUSTANG — AOPM 6', subtitle: 'Parts &amp; Components Reference', comingSoon: false },
-  mustang_aopm7: { title: 'MUSTANG — AOPM 7', subtitle: 'Parts &amp; Components Reference', comingSoon: false },
-  mustang_mopm3: { title: 'MUSTANG — MOPM 3', subtitle: 'Parts &amp; Components Reference', comingSoon: false },
-  mustang_mopm5: { title: 'MUSTANG — MOPM 5', subtitle: 'Parts &amp; Components Reference', comingSoon: true,
-    comingSoonTitle: 'MOPM 5 — Coming Soon',
-    comingSoonText: 'The MOPM 5 parts list is being built. Several components differ from other Mustang machines and need to be verified against the schematic.' },
-  vti: { title: 'VTI 4', subtitle: 'Parts &amp; Components Reference', comingSoon: true,
-    comingSoonTitle: 'VTI 4 — Coming Soon',
-    comingSoonText: 'The VTI 4 parts list is currently being built. Check back soon.' },
-  pmma: { title: 'PMMA ANTIHAZE', subtitle: 'Parts &amp; Components Reference', comingSoon: true,
-    comingSoonTitle: 'PMMA Antihaze — Coming Soon',
-    comingSoonText: 'The PMMA Antihaze parts list is currently being built. Check back soon.' }
-};
-
-function selectMachineGroup(group, tabEl) {
-  // Update main tab active state
-  document.querySelectorAll('.machine-tab').forEach(t => t.classList.remove('active'));
-  tabEl.classList.add('active');
-
-  const subtabs = document.getElementById('mustangSubtabs');
-
-  if (group === 'mustang') {
-    subtabs.style.display = 'flex';
-    // Select first subtab by default
-    const firstSubtab = subtabs.querySelector('.machine-subtab');
-    selectMachine('mustang_aopm3', firstSubtab);
-  } else {
-    subtabs.style.display = 'none';
-    selectMachine(group, tabEl);
-  }
-}
-
-function selectMachine(key, tabEl) {
-  const m = machines[key];
-
-  // Update subtab active state if it's a mustang sub
-  if (key.startsWith('mustang_')) {
-    document.querySelectorAll('.machine-subtab').forEach(t => t.classList.remove('active'));
-    tabEl.classList.add('active');
-  }
-
-  // Update header
-  document.getElementById('machineTitle').textContent = m.title;
-  document.getElementById('machineSubtitle').innerHTML = m.subtitle;
-
-  // Toggle parts list vs coming soon
-  const partsUI = document.getElementById('partsUI');
-  const comingSoon = document.getElementById('comingSoon');
-
-  if (m.comingSoon) {
-    partsUI.style.display = 'none';
-    comingSoon.style.display = 'flex';
-    document.getElementById('comingSoonTitle').textContent = m.comingSoonTitle;
-    document.getElementById('comingSoonText').textContent = m.comingSoonText;
-  } else {
-    partsUI.style.display = '';
-    comingSoon.style.display = 'none';
-  }
-}
 
 buildLegend();
 render();
 
 // ── CHECK FOR UPDATES ─────────────────────────────────────────────────────────
-function showToast(msg) {
-  let toast = document.getElementById('toast');
-  if (!toast) {
-    toast = document.createElement('div');
-    toast.id = 'toast';
-    toast.style.cssText = 'position:fixed;bottom:28px;left:50%;transform:translateX(-50%);background:#1F3864;color:#fff;padding:12px 22px;border-radius:24px;font-size:14px;font-weight:600;box-shadow:0 4px 20px rgba(0,0,0,0.3);z-index:99999;transition:opacity 0.4s;white-space:nowrap;font-family:IBM Plex Sans,Arial,sans-serif;';
-    document.body.appendChild(toast);
-  }
-  toast.textContent = msg;
-  toast.style.opacity = '1';
-  clearTimeout(toast._hide);
-  toast._hide = setTimeout(() => { toast.style.opacity = '0'; }, 2500);
-}
-
 async function checkForUpdates() {
-  try {
-    showToast('🔄 Checking for updates…');
-    if ('serviceWorker' in navigator) {
-      const registrations = await navigator.serviceWorker.getRegistrations();
-      for (const reg of registrations) await reg.unregister();
-    }
-    if ('caches' in window) {
-      const names = await caches.keys();
-      for (const name of names) {
-        if (name.startsWith('mvs-parts')) await caches.delete(name);
+  if (confirm('This will refresh the app and pull the latest version. Continue?')) {
+    try {
+      // Unregister all service workers
+      if ('serviceWorker' in navigator) {
+        const registrations = await navigator.serviceWorker.getRegistrations();
+        for (const reg of registrations) {
+          await reg.unregister();
+        }
       }
+      // Clear only this app's caches
+      if ('caches' in window) {
+        const names = await caches.keys();
+        for (const name of names) {
+          if (name.startsWith('mvs-parts')) {
+            await caches.delete(name);
+          }
+        }
+      }
+      // Hard reload — bypass cache
+      window.location.reload(true);
+    } catch (e) {
+      window.location.reload(true);
     }
-    showToast('✅ Updated! Reloading…');
-    setTimeout(() => window.location.reload(true), 1200);
-  } catch (e) {
-    showToast('⚠️ Update failed, reloading…');
-    setTimeout(() => window.location.reload(true), 1200);
   }
 }
 
@@ -1337,8 +1021,8 @@ async function checkForUpdates() {
 function shareApp() {
   if (navigator.share) {
     navigator.share({
-      title: 'Parts Tracker',
-      text: 'Quick parts reference for the shop floor.',
+      title: 'Mustang Vacuum Systems — Parts List',
+      text: 'Colt 48 / Colt 4828 — Electrical & Mechanical Parts Reference',
       url: 'https://nlt42886.github.io/mustang-parts-list/'
     }).catch(() => {});
   } else {
@@ -1349,40 +1033,18 @@ function shareApp() {
 
 // ── INSTALL PROMPT ────────────────────────────────────────────────────────────
 let _installPrompt = null;
-
 window.addEventListener('beforeinstallprompt', e => {
   e.preventDefault();
   _installPrompt = e;
   const btn = document.getElementById('installBtn');
   if (btn) btn.style.display = '';
-  // Show popup if not already installed and not dismissed before
-  if (!localStorage.getItem('installDismissed')) {
-    setTimeout(() => showInstallPopup(), 1500);
-  }
 });
-
 window.addEventListener('appinstalled', () => {
   _installPrompt = null;
   const btn = document.getElementById('installBtn');
   if (btn) btn.style.display = 'none';
-  hideInstallPopup();
 });
-
-function showInstallPopup() {
-  document.getElementById('installPopup').style.display = 'flex';
-}
-
-function hideInstallPopup() {
-  document.getElementById('installPopup').style.display = 'none';
-}
-
-function dismissInstall() {
-  localStorage.setItem('installDismissed', '1');
-  hideInstallPopup();
-}
-
 async function installApp() {
-  hideInstallPopup();
   if (!_installPrompt) return;
   _installPrompt.prompt();
   const { outcome } = await _installPrompt.userChoice;
@@ -16604,13 +16266,13 @@ var __async = (__this, __arguments, generator) => {
           }, options2.title)),
           new Heading1Style(__spreadValues({
             run: {
-              color: "1A3FC1",
+              color: "2E74B5",
               size: 32
             }
           }, options2.heading1)),
           new Heading2Style(__spreadValues({
             run: {
-              color: "1A3FC1",
+              color: "2E74B5",
               size: 26
             }
           }, options2.heading2)),
@@ -16622,13 +16284,13 @@ var __async = (__this, __arguments, generator) => {
           }, options2.heading3)),
           new Heading4Style(__spreadValues({
             run: {
-              color: "1A3FC1",
+              color: "2E74B5",
               italics: true
             }
           }, options2.heading4)),
           new Heading5Style(__spreadValues({
             run: {
-              color: "1A3FC1"
+              color: "2E74B5"
             }
           }, options2.heading5)),
           new Heading6Style(__spreadValues({
