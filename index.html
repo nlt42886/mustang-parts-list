@@ -478,8 +478,8 @@
     background: none;
     border: none;
     cursor: pointer;
-    font-size: 13px;
-    padding: 2px 5px;
+    font-size: 20px;
+    padding: 4px 6px;
     border-radius: 4px;
     opacity: 0.55;
     transition: opacity 0.15s, background 0.15s;
@@ -642,11 +642,11 @@
   <table>
     <thead>
       <tr>
+        <th class="edit-col-header" id="editColHeader" style="display:none"></th>
         <th data-col="3" class="sorted" onclick="sortTable(3)">Part Number <span class="sort-arrow">▲</span></th>
         <th data-col="1" onclick="sortTable(1)">Category <span class="sort-arrow">▲</span></th>
         <th data-col="2" onclick="sortTable(2)">Description <span class="sort-arrow">▲</span></th>
         <th data-col="0" onclick="sortTable(0)">Schematic <span class="sort-arrow">▲</span></th>
-        <th class="edit-col-header" id="editColHeader" style="display:none"></th>
       </tr>
     </thead>
     <tbody id="tbody"></tbody>
@@ -1210,11 +1210,11 @@ function render() {
         </td>`
       : "";
     return `<tr>
+      ${editCols}
       <td>${pnHtml(r[3], r[2])}</td>
       <td>${badgeHtml(r[1], r[3])}</td>
       <td>${descHtml(r[2], r[3])}</td>
       <td class="ref-cell">${r[0]}</td>
-      ${editCols}
     </tr>`;
   }).join("");
 
@@ -1389,6 +1389,7 @@ async function exportDocx() {
 function buildLegend() {
   const cats = [...new Set(getWorkingData().map(r=>r[1]))].sort();
   const legend = document.getElementById("catLegend");
+  legend.innerHTML = "";
   const all = document.createElement("span");
   all.className = "cat-pill active";
   all.style.background = "#1F3864";
@@ -1754,12 +1755,68 @@ async function executePinAction() {
   }
 }
 
-function saveParts(_pin) {
-  showToast("⚠️ Cloud sync is not available");
+// ── CRYPTO HELPERS (AES-GCM, key derived from PIN via PBKDF2) ────────────────
+async function _deriveKey(pin) {
+  const enc = new TextEncoder();
+  const keyMaterial = await crypto.subtle.importKey(
+    "raw", enc.encode(pin), "PBKDF2", false, ["deriveKey"]
+  );
+  return crypto.subtle.deriveKey(
+    { name: "PBKDF2", salt: enc.encode("mustang-parts-v1"), iterations: 200000, hash: "SHA-256" },
+    keyMaterial,
+    { name: "AES-GCM", length: 256 },
+    false,
+    ["encrypt", "decrypt"]
+  );
 }
 
-function restoreParts(_pin) {
-  showToast("⚠️ Cloud sync is not available");
+async function _encrypt(pin, data) {
+  const key = await _deriveKey(pin);
+  const iv  = crypto.getRandomValues(new Uint8Array(12));
+  const enc = new TextEncoder();
+  const ciphertext = await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, enc.encode(JSON.stringify(data)));
+  const combined = new Uint8Array(12 + ciphertext.byteLength);
+  combined.set(iv, 0);
+  combined.set(new Uint8Array(ciphertext), 12);
+  return btoa(String.fromCharCode(...combined));
+}
+
+async function _decrypt(pin, b64) {
+  const key      = await _deriveKey(pin);
+  const combined = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+  const iv       = combined.slice(0, 12);
+  const ct       = combined.slice(12);
+  const plain    = await crypto.subtle.decrypt({ name: "AES-GCM", iv }, key, ct);
+  return JSON.parse(new TextDecoder().decode(plain));
+}
+
+// ── SAVE / RESTORE (encrypted localStorage — swap these for Firestore calls
+//    once Firebase config is added) ──────────────────────────────────────────
+async function saveParts(pin) {
+  try {
+    const blob = await _encrypt(pin, activeData ?? data);
+    localStorage.setItem("mustang_parts_" + btoa(pin), blob);
+    showToast("✅ Saved! Only your PIN can decrypt this data.");
+  } catch(e) {
+    showToast("❌ Save failed: " + e.message);
+    throw e;
+  }
+}
+
+async function restoreParts(pin) {
+  try {
+    const blob = localStorage.getItem("mustang_parts_" + btoa(pin));
+    if (!blob) { showToast("❌ No saved data found for that PIN"); throw new Error("not found"); }
+    activeData = await _decrypt(pin, blob);
+    unsavedChanges = 0;
+    updateEditBadge();
+    buildLegend();
+    render();
+    showToast("✅ Restored successfully!");
+  } catch(e) {
+    if (e.message !== "not found") showToast("❌ Wrong PIN or corrupted data");
+    throw e;
+  }
 }
 
 </script>
