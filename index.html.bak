@@ -485,8 +485,8 @@
     background: none;
     border: none;
     cursor: pointer;
-    font-size: 14px;
-    padding: 3px 4px;
+    font-size: 20px;
+    padding: 4px 6px;
     border-radius: 4px;
     opacity: 0.55;
     transition: opacity 0.15s, background 0.15s;
@@ -494,8 +494,8 @@
   }
   .row-edit-btn:hover { opacity: 1; background: #e8f0fe; }
   .row-del-btn:hover  { opacity: 1; background: #fdecea; }
-  .edit-cell { white-space: nowrap; padding: 2px 4px !important; overflow: hidden; }
-  th.edit-col-header { width: 60px; }
+  .edit-cell { white-space: nowrap; padding: 4px 8px !important; }
+  th.edit-col-header { width: 68px; }
 
   /* ── MODALS ─────────────────────────────────────────────────────────────── */
   .modal-overlay {
@@ -693,21 +693,6 @@
     <div class="modal-btns">
       <button class="mbtn mbtn-secondary" onclick="closePartModal()">Cancel</button>
       <button class="mbtn mbtn-primary" onclick="savePartModal()">Save Part</button>
-    </div>
-  </div>
-</div>
-
-<!-- Quick Edit Modal — single-field cell editor for edit mode -->
-<div class="modal-overlay" id="quickModal" onclick="if(event.target===this)closeQuickModal()">
-  <div class="modal-box" style="max-width:380px">
-    <div class="modal-title" id="quickModalTitle">Edit Field</div>
-    <div class="modal-field">
-      <label id="quickModalLabel">Value</label>
-      <input type="text" id="quickModalInput" autocomplete="off">
-    </div>
-    <div class="modal-btns">
-      <button class="mbtn mbtn-secondary" onclick="closeQuickModal()">Cancel</button>
-      <button class="mbtn mbtn-primary" onclick="saveQuickEdit()">Save</button>
     </div>
   </div>
 </div>
@@ -1253,17 +1238,6 @@ function render() {
           <button class="row-del-btn" onclick="deletePart(${origIdx})" title="Delete">🗑️</button>
         </td>`
       : "";
-    if (editMode) {
-      const qe = (fi) => `onclick="quickEditField(${origIdx},${fi})" style="cursor:text" title="Click to edit"`;
-      const cs = catStyles[r[1]] || { bg:"#F3F4F6", color:"#374151" };
-      return `<tr>
-        ${editCols}
-        <td ${qe(3)}><span class="pn-link">${r[3]}</span></td>
-        <td ${qe(1)}><span class="cat-badge" style="background:${cs.bg};color:${cs.color}">${r[1]}</span></td>
-        <td ${qe(2)}><span class="desc-link">${r[2]}</span></td>
-        <td class="ref-cell" ${qe(0)}>${r[0]}</td>
-      </tr>`;
-    }
     return `<tr>
       ${editCols}
       <td>${pnHtml(r[3], r[2])}</td>
@@ -1483,10 +1457,6 @@ function doSearch() {
 document.getElementById("search").addEventListener("input", render);
 document.getElementById("search").addEventListener("keydown", function(e) {
   if (e.key === "Enter") doSearch();
-});
-document.getElementById("quickModalInput").addEventListener("keydown", function(e) {
-  if (e.key === "Enter") saveQuickEdit();
-  if (e.key === "Escape") closeQuickModal();
 });
 
 // ── MACHINE SELECTOR ────────────────────────────────────────────────────────
@@ -1741,40 +1711,6 @@ function savePartModal() {
 
 function closePartModal() {
   document.getElementById("partModal").style.display = "none";
-}
-
-// ── QUICK EDIT (single-field inline editor for edit mode) ─────────────────────
-const _fieldLabels = ["Schematic Ref", "Category", "Description", "Part Number"];
-let _qeIdx = -1, _qeField = -1;
-
-function quickEditField(origIdx, fieldIdx) {
-  _qeIdx   = origIdx;
-  _qeField = fieldIdx;
-  const current = getWorkingData()[origIdx][fieldIdx];
-  document.getElementById("quickModalTitle").textContent = "Edit " + _fieldLabels[fieldIdx];
-  document.getElementById("quickModalLabel").textContent  = _fieldLabels[fieldIdx];
-  const inp = document.getElementById("quickModalInput");
-  inp.value = current;
-  inp.setAttribute("list", fieldIdx === 1 ? "catList" : "");
-  document.getElementById("quickModal").style.display = "flex";
-  setTimeout(() => inp.select(), 60);
-}
-
-function saveQuickEdit() {
-  if (_qeIdx < 0) return;
-  const val = document.getElementById("quickModalInput").value.trim();
-  if (!activeData) activeData = getWorkingData().map(r => [...r]);
-  activeData[_qeIdx][_qeField] = val;
-  unsavedChanges++;
-  updateEditBadge();
-  closeQuickModal();
-  buildLegend();
-  render();
-}
-
-function closeQuickModal() {
-  document.getElementById("quickModal").style.display = "none";
-  _qeIdx = _qeField = -1;
 }
 
 // ── PIN MODAL ─────────────────────────────────────────────────────────────────
