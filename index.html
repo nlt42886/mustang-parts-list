@@ -589,6 +589,12 @@
     .count{margin-left:0;}
   }
 </style>
+<!-- Firebase compat SDK — loaded here so firebase global is available to the
+     main script below. The API key is intentionally public: Firebase web keys
+     are not secrets (see firebase.google.com/docs/projects/api-keys). Security
+     is enforced by Firestore Rules + client-side AES-GCM encryption. -->
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
 </head>
 <body>
 
@@ -730,6 +736,22 @@
 </div>
 
 <script>
+// ── FIREBASE INIT ─────────────────────────────────────────────────────────────
+// API key is intentionally in client-side code — this is normal for Firebase
+// web apps and is not a security risk. Real security = Firestore Rules + AES
+// encryption below. See: https://firebase.google.com/docs/projects/api-keys
+if (!firebase.apps.length) {
+  firebase.initializeApp({
+    apiKey:            "AIzaSyDVfGADBDlafYN8wR7P8EHsCa6phur6Ghs",
+    authDomain:        "mustang-parts-list.firebaseapp.com",
+    projectId:         "mustang-parts-list",
+    storageBucket:     "mustang-parts-list.firebasestorage.app",
+    messagingSenderId: "503413299962",
+    appId:             "1:503413299962:web:a14956146453f45f250743"
+  });
+}
+const _db = firebase.firestore();
+
 // ── DATA ──────────────────────────────────────────────────────────────────────
 // [schematic_ref, category, description, part_number]
 const data = [
@@ -1763,6 +1785,13 @@ async function executePinAction() {
 }
 
 // ── CRYPTO HELPERS (AES-GCM, key derived from PIN via PBKDF2) ────────────────
+// _pinToDocId: hashes the PIN with SHA-256 so the real PIN is never stored in
+// Firestore — only a deterministic, one-way fingerprint is used as document ID.
+async function _pinToDocId(pin) {
+  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode("mustang-docid-v1:" + pin));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, "0")).join("");
+}
+
 async function _deriveKey(pin) {
   const enc = new TextEncoder();
   const keyMaterial = await crypto.subtle.importKey(
@@ -1797,13 +1826,19 @@ async function _decrypt(pin, b64) {
   return JSON.parse(new TextDecoder().decode(plain));
 }
 
-// ── SAVE / RESTORE (encrypted localStorage — swap these for Firestore calls
-//    once Firebase config is added) ──────────────────────────────────────────
+// ── SAVE / RESTORE (Firestore — data AES-GCM encrypted before upload) ────────
+// Security model:
+//   1. _pinToDocId hashes the PIN → Firestore never stores the real PIN.
+//   2. _encrypt encrypts the payload with the PIN → blob is unreadable in
+//      Firestore without the exact PIN (AES-GCM auth tag will fail to decrypt).
+//   3. Firestore Rules (set in Firebase Console) restrict access to the
+//      "parts" collection only — all other paths are denied.
 async function saveParts(pin) {
+  const docId = await _pinToDocId(pin);
   try {
     const blob = await _encrypt(pin, activeData ?? data);
-    localStorage.setItem("mustang_parts_" + btoa(pin), blob);
-    showToast("✅ Saved! Only your PIN can decrypt this data.");
+    await _db.collection("parts").doc(docId).set({ blob, ts: Date.now() });
+    showToast("✅ Saved to cloud! Only your PIN can decrypt this data.");
   } catch(e) {
     showToast("❌ Save failed: " + e.message);
     throw e;
@@ -1811,15 +1846,16 @@ async function saveParts(pin) {
 }
 
 async function restoreParts(pin) {
+  const docId = await _pinToDocId(pin);
   try {
-    const blob = localStorage.getItem("mustang_parts_" + btoa(pin));
-    if (!blob) { showToast("❌ No saved data found for that PIN"); throw new Error("not found"); }
-    activeData = await _decrypt(pin, blob);
+    const snap = await _db.collection("parts").doc(docId).get();
+    if (!snap.exists) { showToast("❌ No cloud save found for that PIN"); throw new Error("not found"); }
+    activeData = await _decrypt(pin, snap.data().blob);
     unsavedChanges = 0;
     updateEditBadge();
     buildLegend();
     render();
-    showToast("✅ Restored successfully!");
+    showToast("✅ Restored from cloud!");
   } catch(e) {
     if (e.message !== "not found") showToast("❌ Wrong PIN or corrupted data");
     throw e;
