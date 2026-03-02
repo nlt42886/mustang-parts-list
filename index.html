@@ -1902,6 +1902,8 @@ async function saveParts(pin) {
   try {
     const blob = await _encrypt(pin, activeData ?? data);
     await _db.collection("parts").doc(docId).set({ blob, ts: Date.now() });
+    unsavedChanges = 0;
+    updateEditBadge();
     showToast("✅ Saved to cloud! Only your PIN can decrypt this data.");
   } catch(e) {
     showToast("❌ Save failed: " + e.message);
