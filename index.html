@@ -332,11 +332,18 @@
     border-radius: 0;
   }
 
-  /* Column widths */
-  tbody td:nth-child(1), thead th:nth-child(1) { width: 125px; min-width: 125px; max-width: 125px; } /* Part Number */
-  tbody td:nth-child(2), thead th:nth-child(2) { width: 100px; min-width: 100px; max-width: 100px; } /* Category */
-  tbody td:nth-child(3), thead th:nth-child(3) { width: 190px; min-width: 190px; padding-left: 24px !important; } /* Description */
-  tbody td:nth-child(4), thead th:nth-child(4) { width: 140px; min-width: 140px; } /* Schematic */
+  /* Column widths — tbody and thead use separate offsets because
+     the edit-col-header <th> is always first in thead (display:none
+     when not in edit mode), so data columns are nth-child(2-5) in thead
+     but nth-child(1-4) in tbody (no edit cell in normal mode). */
+  tbody td:nth-child(1) { width: 125px; min-width: 125px; max-width: 125px; } /* Part Number */
+  tbody td:nth-child(2) { width: 100px; min-width: 100px; max-width: 100px; } /* Category */
+  tbody td:nth-child(3) { width: 190px; min-width: 190px; padding-left: 24px !important; } /* Description */
+  tbody td:nth-child(4) { width: 140px; min-width: 140px; } /* Schematic */
+  thead th:nth-child(2) { width: 125px; min-width: 125px; max-width: 125px; } /* Part Number */
+  thead th:nth-child(3) { width: 100px; min-width: 100px; max-width: 100px; } /* Category */
+  thead th:nth-child(4) { width: 190px; min-width: 190px; padding-left: 24px !important; } /* Description */
+  thead th:nth-child(5) { width: 140px; min-width: 140px; } /* Schematic */
 
   table {
     width:100%; border-collapse:collapse;
