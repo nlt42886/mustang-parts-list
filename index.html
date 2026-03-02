@@ -643,6 +643,7 @@
   <div class="edit-actions" id="editActions">
     <span class="edit-notice">✏️ Edit Mode — rows shown ungrouped for editing</span>
     <button class="export-btn" onclick="addPart()">➕ Add Part</button>
+    <button class="export-btn" id="groupSplitBtn" onclick="toggleEditGrouped()">📋 Group by Part #</button>
     <button class="export-btn" onclick="openPinModal('save')">💾 Save</button>
     <button class="export-btn" onclick="openPinModal('restore')">📥 Restore</button>
     <button class="export-btn" onclick="openPinModal('reset')">↩️ Reset</button>
@@ -1183,11 +1184,48 @@ function groupData(rows) {
   return grouped;
 }
 
+// Splits any comma-separated schematic refs into individual rows.
+// Idempotent — rows already containing a single ref are left unchanged.
+function explodeRefs(rows) {
+  const out = [];
+  for (const row of rows) {
+    const refs = row[0].split(',').map(s => s.trim()).filter(Boolean);
+    if (refs.length <= 1) { out.push([...row]); continue; }
+    for (const ref of refs) out.push([ref, row[1], row[2], row[3]]);
+  }
+  return out;
+}
+
+// Like groupData() but always collapses by PN regardless of sort column.
+// Used by the "Group by Part #" edit-mode toggle.
+function collapseByPN(rows) {
+  const grouped = [];
+  const pnMap = new Map();
+  for (const row of rows) {
+    const [ref, cat, desc, pn] = row;
+    if (cat === "PLC / Network" || pn === "Not listed" || pn === "—") {
+      grouped.push([...row]); continue;
+    }
+    const key = pn + "||" + cat;
+    if (pnMap.has(key)) {
+      const ex = grouped[pnMap.get(key)];
+      const existing = ex[0].split(',').map(s => s.trim());
+      if (ref !== "—" && !existing.includes(ref))
+        ex[0] = ex[0] === "—" ? ref : ex[0] + ", " + ref;
+    } else {
+      grouped.push([...row]);
+      pnMap.set(key, grouped.length - 1);
+    }
+  }
+  return grouped;
+}
+
 // ── STATE ────────────────────────────────────────────────────────────────────
 let sortCol = 3, sortAsc = true;
 let filterCat = "";
 let activeData  = null;   // null = use hardcoded master data
 let editMode    = false;
+let editGrouped = false;  // true when "Group by Part #" is active in edit mode
 let unsavedChanges = 0;
 let _pinModalMode  = "save";
 
@@ -1560,6 +1598,15 @@ function selectMachine(key, tabEl) {
 buildLegend();
 render();
 
+// Auto-restore from cloud on page load if the user previously saved with a PIN.
+// Runs silently — any error (network, stale PIN) is swallowed and the default
+// hardcoded data is shown instead.
+(async function autoRestore() {
+  const pin = localStorage.getItem('mustangPartsPin');
+  if (!pin) return;
+  try { await restoreParts(pin, /*silent=*/true); } catch(e) { /* fall through */ }
+})();
+
 // ── CHECK FOR UPDATES ─────────────────────────────────────────────────────────
 function showToast(msg) {
   let toast = document.getElementById('toast');
@@ -1673,15 +1720,19 @@ function toggleEditMode() {
     : '✏️ Edit<span class="edit-badge" id="editBadge" style="display:none"></span>';
   document.getElementById("editActions").style.display = editMode ? "flex" : "none";
 
-  // Copy master data into activeData so edits don't mutate the original const
-  if (editMode && activeData === null) {
-    activeData = data.map(r => [...r]);
-  }
-
-  // Populate the category autocomplete list
   if (editMode) {
-    const cats = [...new Set(getWorkingData().map(r => r[1]))].sort();
+    // Always explode comma-separated refs so every schematic ref gets its own
+    // editable row. If activeData is null (first edit session), copy from
+    // master data first.  explodeRefs() is idempotent for already-single refs.
+    activeData = explodeRefs(activeData ?? data);
+    editGrouped = false;
+    const btn = document.getElementById("groupSplitBtn");
+    if (btn) btn.textContent = "📋 Group by Part #";
+    // Populate the category autocomplete list
+    const cats = [...new Set(activeData.map(r => r[1]))].sort();
     document.getElementById("catList").innerHTML = cats.map(c => `<option value="${c}">`).join("");
+  } else {
+    editGrouped = false;
   }
 
   document.getElementById("partsTable").classList.toggle("edit-active", editMode);
@@ -1694,6 +1745,14 @@ function updateEditBadge() {
   if (!badge) return;
   badge.textContent = unsavedChanges > 0 ? `${unsavedChanges} unsaved` : "";
   badge.style.display = unsavedChanges > 0 ? "inline" : "none";
+}
+
+function toggleEditGrouped() {
+  editGrouped = !editGrouped;
+  activeData = editGrouped ? collapseByPN(activeData) : explodeRefs(activeData);
+  const btn = document.getElementById("groupSplitBtn");
+  if (btn) btn.textContent = editGrouped ? "🔀 Split Refs" : "📋 Group by Part #";
+  render();
 }
 
 // ── ADD / EDIT / DELETE ───────────────────────────────────────────────────────
@@ -1829,6 +1888,7 @@ async function executePinAction() {
   if (_pinModalMode === "reset") {
     activeData = null;
     unsavedChanges = 0;
+    localStorage.removeItem('mustangPartsPin');
     updateEditBadge();
     closePinModal();
     buildLegend();
@@ -1910,6 +1970,8 @@ async function saveParts(pin) {
     await _db.collection("parts").doc(docId).set({ blob, ts: Date.now() });
     unsavedChanges = 0;
     updateEditBadge();
+    // Cache the PIN so the next page load can auto-restore without prompting
+    localStorage.setItem('mustangPartsPin', pin);
     showToast("✅ Saved to cloud! Only your PIN can decrypt this data.");
   } catch(e) {
     showToast("❌ Save failed: " + e.message);
@@ -1917,19 +1979,22 @@ async function saveParts(pin) {
   }
 }
 
-async function restoreParts(pin) {
+async function restoreParts(pin, silent = false) {
   const docId = await _pinToDocId(pin);
   try {
     const snap = await _db.collection("parts").doc(docId).get();
-    if (!snap.exists) { showToast("❌ No cloud save found for that PIN"); throw new Error("not found"); }
+    if (!snap.exists) {
+      if (!silent) showToast("❌ No cloud save found for that PIN");
+      throw new Error("not found");
+    }
     activeData = await _decrypt(pin, snap.data().blob);
     unsavedChanges = 0;
     updateEditBadge();
     buildLegend();
     render();
-    showToast("✅ Restored from cloud!");
+    showToast(silent ? "☁️ Auto-restored your last save." : "✅ Restored from cloud!");
   } catch(e) {
-    if (e.message !== "not found") showToast("❌ Wrong PIN or corrupted data");
+    if (!silent && e.message !== "not found") showToast("❌ Wrong PIN or corrupted data");
     throw e;
   }
 }
