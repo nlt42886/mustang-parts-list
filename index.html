@@ -471,9 +471,14 @@
     font-size: 15px;
     border-bottom: 1px solid #e8ecf0;
     vertical-align: middle;
+    overflow: hidden;
   }
 
-
+  /* In edit mode the edit-cell is inserted at position 1, shifting every data
+     column right by one.  Re-apply the description padding-left to position 4
+     and strip it from position 3 (which is now Category, not Description). */
+  table.edit-active tbody td:nth-child(3) { padding-left: 8px !important; }
+  table.edit-active tbody td:nth-child(4) { padding-left: 24px !important; }
 
   /* Category badge in table */
   .cat-badge {
@@ -782,7 +787,7 @@
   <button class="dismiss-btn" onclick="document.getElementById('searchTip').style.display='none'" title="Dismiss">✕</button>
 </div>
 <div class="table-scroll-outer"><div class="table-wrap">
-  <table>
+  <table id="partsTable">
     <thead>
       <tr>
         <th class="edit-col-header" id="editColHeader" style="display:none"></th>
@@ -1809,6 +1814,7 @@ function toggleEditMode() {
     document.getElementById("catList").innerHTML = cats.map(c => `<option value="${c}">`).join("");
   }
 
+  document.getElementById("partsTable").classList.toggle("edit-active", editMode);
   updateEditBadge();
   render();
 }
