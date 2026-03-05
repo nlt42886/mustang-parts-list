@@ -427,18 +427,10 @@
     border-radius: 0;
   }
 
-  /* Column widths — tbody and thead use separate offsets because
-     the edit-col-header <th> is always first in thead (display:none
-     when not in edit mode), so data columns are nth-child(2-5) in thead
-     but nth-child(1-4) in tbody (no edit cell in normal mode). */
-  tbody td:nth-child(1) { width: 125px; min-width: 125px; max-width: 125px; } /* Part Number */
-  tbody td:nth-child(2) { width: 100px; min-width: 100px; max-width: 100px; } /* Category */
-  tbody td:nth-child(3) { width: 190px; min-width: 190px; padding-left: 24px !important; } /* Description */
-  tbody td:nth-child(4) { width: 140px; min-width: 140px; } /* Schematic */
-  thead th:nth-child(2) { width: 125px; min-width: 125px; max-width: 125px; } /* Part Number */
-  thead th:nth-child(3) { width: 100px; min-width: 100px; max-width: 100px; } /* Category */
-  thead th:nth-child(4) { width: 190px; min-width: 190px; padding-left: 24px !important; } /* Description */
-  thead th:nth-child(5) { width: 140px; min-width: 140px; } /* Schematic */
+  /* Column widths are set dynamically via JS (colWidths array) so that
+     reordering and resizing both work correctly. The padding-left on
+     Description is applied via a dedicated CSS class instead. */
+  td.col-desc, th.col-desc { padding-left: 24px !important; }
 
   table {
     width:100%; border-collapse:collapse;
@@ -459,6 +451,115 @@
   thead th:hover { background:#0F2E9A; }
   thead th .sort-arrow { display:inline-block; margin-left:5px; font-size:10px; opacity:0.4; }
   thead th.sorted .sort-arrow { opacity:1; }
+
+  /* Column reorder drag-and-drop styles */
+  thead th.col-dragging { opacity: 0.5; cursor: grabbing !important; }
+  thead th.col-drag-over { background: #1A3FC1 !important; outline: 3px dashed rgba(255,255,255,0.6); }
+  thead th[draggable="true"] { cursor: grab; }
+  .col-reorder-hint { font-size: 11px; color: #c94020; font-weight: 600; margin-left: 6px; }
+
+  /* ── COLUMN CONTROL BAR (edit mode, appears above table) ─────────────────── */
+  #colControlBar {
+    display: none;
+    max-width: 1080px;
+    margin: 6px 16px 0;
+    background: #1a2e50;
+    border: 1px solid rgba(100,160,255,0.3);
+    border-radius: 12px;
+    padding: 10px 14px;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+  }
+  #colControlBar.visible { display: flex; }
+  #colControlBar .ccb-label {
+    font-size: 12px;
+    font-weight: 700;
+    color: rgba(180,210,255,0.8);
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    flex-shrink: 0;
+    margin-right: 4px;
+  }
+  #colControlBar .ccb-name {
+    font-size: 13px;
+    font-weight: 700;
+    color: #fff;
+    background: rgba(100,160,255,0.2);
+    border-radius: 6px;
+    padding: 3px 10px;
+    flex-shrink: 0;
+  }
+  #colControlBar .ccb-divider {
+    width: 1px;
+    height: 32px;
+    background: rgba(100,160,255,0.25);
+    flex-shrink: 0;
+    margin: 0 2px;
+  }
+  #colControlBar .ccb-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+  #colControlBar .ccb-group-label {
+    font-size: 10px;
+    font-weight: 700;
+    color: rgba(150,190,255,0.6);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .ccb-btn {
+    min-width: 52px;
+    height: 44px;
+    border-radius: 10px;
+    border: 1.5px solid rgba(100,160,255,0.35);
+    background: rgba(255,255,255,0.08);
+    color: #fff;
+    font-size: 20px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.12s, transform 0.08s;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: manipulation;
+    padding: 0 10px;
+  }
+  .ccb-btn:hover  { background: rgba(100,160,255,0.22); }
+  .ccb-btn:active { background: rgba(100,160,255,0.4); transform: scale(0.95); }
+  .ccb-btn.ccb-reset {
+    font-size: 14px;
+    min-width: 44px;
+    color: rgba(180,210,255,0.7);
+    border-color: rgba(100,160,255,0.2);
+  }
+  .ccb-btn.ccb-reset:hover { color: #fff; }
+  #colControlBar .ccb-close {
+    margin-left: auto;
+    background: none;
+    border: none;
+    color: rgba(180,210,255,0.5);
+    font-size: 20px;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 6px;
+    line-height: 1;
+    flex-shrink: 0;
+  }
+  #colControlBar .ccb-close:hover { color: #fff; background: rgba(255,255,255,0.1); }
+
+  /* In edit mode: header tappable feel, no inline resize buttons */
+  table.edit-active thead th[data-col] { cursor: pointer; }
+  table.edit-active thead th[data-col].ccb-active {
+    background: #1A3FC1 !important;
+    outline: 2px solid rgba(255,255,255,0.5);
+    outline-offset: -2px;
+  }
 
 
   tbody tr { transition:background 0.12s; }
@@ -910,6 +1011,7 @@
   </div>
   <div class="edit-actions" id="editActions">
     <span class="edit-notice">✏️ Edit Mode — rows shown ungrouped for editing</span>
+    <span class="col-reorder-hint">Tap a column header to move or resize it</span>
     <button class="export-btn" onclick="addPart()">➕ Add Part</button>
     <button class="export-btn" id="groupSplitBtn" onclick="toggleEditGrouped()">📋 Group by Part #</button>
     <button class="export-btn" onclick="openPinModal('save')">💾 Save</button>
@@ -921,6 +1023,25 @@
 
 
 <div class="cat-legend" id="catLegend"></div>
+<!-- Column Control Bar — appears above table in edit mode when a column is tapped -->
+<div id="colControlBar">
+  <span class="ccb-label">Column:</span>
+  <span class="ccb-name" id="ccbColName">—</span>
+  <div class="ccb-divider"></div>
+  <div class="ccb-group">
+    <span class="ccb-group-label">Move</span>
+    <button class="ccb-btn" id="ccbLeft"  title="Move column left">◀</button>
+    <button class="ccb-btn" id="ccbRight" title="Move column right">▶</button>
+  </div>
+  <div class="ccb-divider"></div>
+  <div class="ccb-group">
+    <span class="ccb-group-label">Width</span>
+    <button class="ccb-btn" id="ccbNarrow" title="Narrower">−</button>
+    <button class="ccb-btn" id="ccbWiden"  title="Wider">+</button>
+    <button class="ccb-btn ccb-reset" id="ccbReset" title="Reset width">↺</button>
+  </div>
+  <button class="ccb-close" id="ccbClose" title="Close">✕</button>
+</div>
 <div class="search-tip" id="searchTip">
   <span class="search-tip-text">💡 Tap any <strong>Part Number</strong> or <strong>Description</strong> to instantly search Google for specs, datasheets, and supplier info.</span>
   <button class="dismiss-btn" onclick="document.getElementById('searchTip').style.display='none'" title="Dismiss">✕</button>
@@ -933,6 +1054,7 @@
         <th data-col="3" class="sorted" onclick="sortTable(3)">Part Number <span class="sort-arrow">▲</span></th>
         <th data-col="1" onclick="sortTable(1)">Category <span class="sort-arrow">▲</span></th>
         <th data-col="2" onclick="sortTable(2)">Description <span class="sort-arrow">▲</span></th>
+        <th data-col="4" onclick="sortTable(4)">Location <span class="sort-arrow">▲</span></th>
         <th data-col="0" onclick="sortTable(0)">Schematic <span class="sort-arrow">▲</span></th>
       </tr>
     </thead>
@@ -959,6 +1081,10 @@
     <div class="modal-field">
       <label>Description</label>
       <input type="text" id="pmDesc" placeholder='e.g. A-B 3-Pole Circuit Breaker 40A'>
+    </div>
+    <div class="modal-field">
+      <label>Location</label>
+      <input type="text" id="pmLoc" placeholder='e.g. Panel A, Cabinet 2, Slot 3'>
     </div>
     <div class="modal-field">
       <label>Part Number</label>
@@ -1046,299 +1172,299 @@ const _db = firebase.firestore();
 const data = [
 
   // ── CIRCUIT BREAKERS ──────────────────────────────────────────────────────
-  ["1CB, 1ACB",           "Circuit Breaker", "16A Circuit Breaker — Manual Motor Starter (x2)",       "140M-D8E-C16"],
-  ["2CB, 2ACB",           "Circuit Breaker", "25A Circuit Breaker (x2)",                              "1492-SP3D250"],
-  ["3CB, 4ACB, 30CB",    "Circuit Breaker", "A-B 3-Pole Circuit Breaker 40A (x3)",                  "1492-SP3C400"],
-  ["4CB",                 "Circuit Breaker", "A-B 3-Pole Circuit Breaker 40A",                       "1492-SP3D400"],
-  ["5CB",                 "Circuit Breaker", "A-B 3-Pole Circuit Breaker 20A (CEX Drive)",           "1492-SP3C200"],
-  ["9CB, 10CB, 11CB, 13CB, 14CB, 15CB", "Circuit Breaker", "A-B 3-Pole Circuit Breaker 50A (x6) — Plasma Power Supply Feed", "1492-SP3C500"],
-  ["17CB",                "Circuit Breaker", "A-B 3-Pole Circuit Breaker 30A (Turntable Option)",   "1492-SP3D300"],
-  ["6CB, 20CB, 26CB, 36CB", "Circuit Breaker", "A-B 2-Pole Circuit Breaker 10A (x4)",              "1492-SP2D100"],
-  ["8CB, 21CB, 22CB, 23CB, 24CB, 27CB, 31CB, 32CB, 33CB, 34CB, 35CB, 56CB", "Circuit Breaker", "A-B 3-Pole Circuit Breaker 5A (x12)", "1492-SP3D050"],
-  ["25CB",                "Circuit Breaker", "A-B 1-Pole Circuit Breaker 20A (Work Light / Enclosure)", "1492-SP1C200"],
-  ["28CB",                "Circuit Breaker", "A-B 1-Pole Circuit Breaker 15A",                      "1492-SP1D150"],
-  ["—",                   "Circuit Breaker", "A-B 1-Pole Circuit Breaker 5A",                       "1492-SP1C050"],
-  ["—",                   "Circuit Breaker", "A-B 1-Pole Circuit Breaker 10A",                      "1492-SP1C100"],
-  ["—",                   "Circuit Breaker", "A-B 1-Pole Circuit Breaker 40A",                      "1492-SP1C400"],
-  ["—",                   "Circuit Breaker", "A-B 1-Pole Circuit Breaker 5A",                       "1492-SP1D050"],
-  ["—",                   "Circuit Breaker", "A-B 2-Pole Circuit Breaker 5A",                       "1492-SP2D050"],
-  ["—",                   "Circuit Breaker", "A-B 1-Pole Circuit Breaker 20A",                      "1492-SP1D200"],
-  ["—",                   "Circuit Breaker", "A-B Manual Motor Starter",                             "140-CMN6300"],
+  ["1CB, 1ACB",           "Circuit Breaker", "16A Circuit Breaker — Manual Motor Starter (x2)",       "140M-D8E-C16", ""],
+  ["2CB, 2ACB",           "Circuit Breaker", "25A Circuit Breaker (x2)",                              "1492-SP3D250", ""],
+  ["3CB, 4ACB, 30CB",    "Circuit Breaker", "A-B 3-Pole Circuit Breaker 40A (x3)",                  "1492-SP3C400", ""],
+  ["4CB",                 "Circuit Breaker", "A-B 3-Pole Circuit Breaker 40A",                       "1492-SP3D400", ""],
+  ["5CB",                 "Circuit Breaker", "A-B 3-Pole Circuit Breaker 20A (CEX Drive)",           "1492-SP3C200", ""],
+  ["9CB, 10CB, 11CB, 13CB, 14CB, 15CB", "Circuit Breaker", "A-B 3-Pole Circuit Breaker 50A (x6) — Plasma Power Supply Feed", "1492-SP3C500", ""],
+  ["17CB",                "Circuit Breaker", "A-B 3-Pole Circuit Breaker 30A (Turntable Option)",   "1492-SP3D300", ""],
+  ["6CB, 20CB, 26CB, 36CB", "Circuit Breaker", "A-B 2-Pole Circuit Breaker 10A (x4)",              "1492-SP2D100", ""],
+  ["8CB, 21CB, 22CB, 23CB, 24CB, 27CB, 31CB, 32CB, 33CB, 34CB, 35CB, 56CB", "Circuit Breaker", "A-B 3-Pole Circuit Breaker 5A (x12)", "1492-SP3D050", ""],
+  ["25CB",                "Circuit Breaker", "A-B 1-Pole Circuit Breaker 20A (Work Light / Enclosure)", "1492-SP1C200", ""],
+  ["28CB",                "Circuit Breaker", "A-B 1-Pole Circuit Breaker 15A",                      "1492-SP1D150", ""],
+  ["—",                   "Circuit Breaker", "A-B 1-Pole Circuit Breaker 5A",                       "1492-SP1C050", ""],
+  ["—",                   "Circuit Breaker", "A-B 1-Pole Circuit Breaker 10A",                      "1492-SP1C100", ""],
+  ["—",                   "Circuit Breaker", "A-B 1-Pole Circuit Breaker 40A",                      "1492-SP1C400", ""],
+  ["—",                   "Circuit Breaker", "A-B 1-Pole Circuit Breaker 5A",                       "1492-SP1D050", ""],
+  ["—",                   "Circuit Breaker", "A-B 2-Pole Circuit Breaker 5A",                       "1492-SP2D050", ""],
+  ["—",                   "Circuit Breaker", "A-B 1-Pole Circuit Breaker 20A",                      "1492-SP1D200", ""],
+  ["—",                   "Circuit Breaker", "A-B Manual Motor Starter",                             "140-CMN6300", ""],
 
   // ── CONTACTORS ────────────────────────────────────────────────────────────
-  ["1CON, 1ACON, 2CON, 2ACON, 5CON", "Contactor", "23A 24VDC Contactor (x5)",                       "100-C23DJ10"],
-  ["3CON, 4CON",          "Contactor",       "43A 24VDC Contactor (x2)",                             "100-C43DJ10"],
-  ["9CON, 10CON, 11CON, 13CON, 14CON, 15CON", "Contactor", "60A 24VDC Contactor — Plasma Power Supply Feed (x6)", "100-C60DJ10"],
-  ["Surge Suppressor",    "Contactor",       "Surge Suppressor for 24VDC 100-Series Contactors",     "100-FSV55"],
+  ["1CON, 1ACON, 2CON, 2ACON, 5CON", "Contactor", "23A 24VDC Contactor (x5)",                       "100-C23DJ10", ""],
+  ["3CON, 4CON",          "Contactor",       "43A 24VDC Contactor (x2)",                             "100-C43DJ10", ""],
+  ["9CON, 10CON, 11CON, 13CON, 14CON, 15CON", "Contactor", "60A 24VDC Contactor — Plasma Power Supply Feed (x6)", "100-C60DJ10", ""],
+  ["Surge Suppressor",    "Contactor",       "Surge Suppressor for 24VDC 100-Series Contactors",     "100-FSV55", ""],
 
   // ── RELAYS ────────────────────────────────────────────────────────────────
-  ["CR1",                 "Relay",           "A-B 700-HK36Z24 Slim-line Relay 24VDC — Interlock, Aux Contact, Water Valve, PS Error, Blower & Work Light Relays",                               "700-HK36Z24"],
-  ["CR0309, CR0310, CR0311, CR0312, CR0313, CR0314", "Relay", "Slim-line Relay — Sputtering Cathode On Signal (x6) — see Schematic column for individual assignments", "700-HK36Z24"],
-  ["CR0404, CR0405",      "Relay",           "CR0404 = Fixture Drive Controller Relay; CR0405 = Mechanical Pump 1 Gas Ballast Valves Relay (x2)", "700-HK36Z24"],
-  ["CR0514, CR0515",      "Relay",           "Plasma Power Supply Water Supply Relay (x2)",           "700-HK36Z24"],
-  ["CR1614",              "Relay",           "Relay — Plasma Power Supply Error Signal Left",         "700-HK36Z24"],
-  ["CR1615",              "Relay",           "Relay — Plasma Power Supply Error Signal Right",        "700-HK36Z24"],
-  ["CR1902",              "Relay",           "Blower 2 VFD Run/Start Relay (Slot 19, D19/2)",         "700-HK36Z24"],
-  ["CR1903",              "Relay",           "Blower 2 VFD Reset-to-Idle Relay (Slot 19, D19/3)",     "700-HK36Z24"],
-  ["CR1907",              "Relay",           "Enclosure Work Light Relay (Slot 19, D19/7)",           "700-HK36Z24"],
-  ["MCR",                 "Relay",           "Master Control Relay 24VDC",                            "700DC-P000Z24"],
-  ["—",                   "Relay",           "Surge Suppressor for 24VDC MCR",                        "199-FSMA9"],
-  ["SCR1",                "Relay",           "A-B Safety Relay",                                      "MSR131RTP"],
-  ["SSR1",                "Relay",           "Solid State Relay / Wago (Thermo Heaters)",             "859-795"],
-  ["—",                   "Relay",           "Watlow Solid State Contactor (Monomer Heater)",         "CZ18-A24V-DC10"],
-  ["—",                   "Relay",           "Relay Socket",                                          "700-HN121"],
+  ["CR1",                 "Relay",           "A-B 700-HK36Z24 Slim-line Relay 24VDC — Interlock, Aux Contact, Water Valve, PS Error, Blower & Work Light Relays",                               "700-HK36Z24", ""],
+  ["CR0309, CR0310, CR0311, CR0312, CR0313, CR0314", "Relay", "Slim-line Relay — Sputtering Cathode On Signal (x6) — see Schematic column for individual assignments", "700-HK36Z24", ""],
+  ["CR0404, CR0405",      "Relay",           "CR0404 = Fixture Drive Controller Relay; CR0405 = Mechanical Pump 1 Gas Ballast Valves Relay (x2)", "700-HK36Z24", ""],
+  ["CR0514, CR0515",      "Relay",           "Plasma Power Supply Water Supply Relay (x2)",           "700-HK36Z24", ""],
+  ["CR1614",              "Relay",           "Relay — Plasma Power Supply Error Signal Left",         "700-HK36Z24", ""],
+  ["CR1615",              "Relay",           "Relay — Plasma Power Supply Error Signal Right",        "700-HK36Z24", ""],
+  ["CR1902",              "Relay",           "Blower 2 VFD Run/Start Relay (Slot 19, D19/2)",         "700-HK36Z24", ""],
+  ["CR1903",              "Relay",           "Blower 2 VFD Reset-to-Idle Relay (Slot 19, D19/3)",     "700-HK36Z24", ""],
+  ["CR1907",              "Relay",           "Enclosure Work Light Relay (Slot 19, D19/7)",           "700-HK36Z24", ""],
+  ["MCR",                 "Relay",           "Master Control Relay 24VDC",                            "700DC-P000Z24", ""],
+  ["—",                   "Relay",           "Surge Suppressor for 24VDC MCR",                        "199-FSMA9", ""],
+  ["SCR1",                "Relay",           "A-B Safety Relay",                                      "MSR131RTP", ""],
+  ["SSR1",                "Relay",           "Solid State Relay / Wago (Thermo Heaters)",             "859-795", ""],
+  ["—",                   "Relay",           "Watlow Solid State Contactor (Monomer Heater)",         "CZ18-A24V-DC10", ""],
+  ["—",                   "Relay",           "Relay Socket",                                          "700-HN121", ""],
 
   // ── POWER SUPPLIES ────────────────────────────────────────────────────────
-  ["PS1",                 "Power Supply",    "Phoenix TRIO Power Supply 24VDC 10A",                   "Trio-PS/1AC/24DC/10"],
-  ["PS2",                 "Power Supply",    "Sola +/- 15VDC 3A Linear Power Supply",                 "SLD-15-3030-15T"],
-  ["Sola Line Conditioner (50Hz Option)", "Power Supply", "Sola Power Line Conditioner 1 KVA 120/120V AC 50Hz (T1 50Hz alternative)", "83-23-710-8"],
-  ["PS3",                 "Power Supply",    "Phoenix TRIO Power Supply 24VDC 40A",                   "Trio-PS/3AC/24DC/40"],
-  ["Advantech PS",        "Power Supply",    "Advantech Touch-screen PC (Turntable Option HMI)",     "PPC-S155T-R90-XE"],
+  ["PS1",                 "Power Supply",    "Phoenix TRIO Power Supply 24VDC 10A",                   "Trio-PS/1AC/24DC/10", ""],
+  ["PS2",                 "Power Supply",    "Sola +/- 15VDC 3A Linear Power Supply",                 "SLD-15-3030-15T", ""],
+  ["Sola Line Conditioner (50Hz Option)", "Power Supply", "Sola Power Line Conditioner 1 KVA 120/120V AC 50Hz (T1 50Hz alternative)", "83-23-710-8", ""],
+  ["PS3",                 "Power Supply",    "Phoenix TRIO Power Supply 24VDC 40A",                   "Trio-PS/3AC/24DC/40", ""],
+  ["Advantech PS",        "Power Supply",    "Advantech Touch-screen PC (Turntable Option HMI)",     "PPC-S155T-R90-XE", ""],
 
   // ── DRIVES / CONTROLLERS ─────────────────────────────────────────────────
-  ["Eurotherm 690+",      "Drive",           "Parker SSD AC Integrator 690+ Series VFD, 460VAC 25HP 3-Phase — Blower Drive (x2). Note: Eurotherm was acquired by Parker/SSD; same product, updated brand.", "55-0010-25"],
-  ["Advanced Energy PE II 10K", "Drive",     "CEX Drive / PE II 10K Generator 40kHz 10kW 208VAC",    "3157600-004"],
-  ["Fixture Drive Controller",  "Drive",     "Dart Motor Controller 1/8 to 1 HP (Fixture Drive)",    "253G-200C"],
-  ["—",                   "Drive",           "Dart Isolated Signal Follower for Dart Controller",     "55G2"],
-  ["Dynamic Braking",     "Drive",           "SSD Parker Dynamic Braking Resistor, 7.10A Overload, 22.5 Ohm Rating — for Parker 690+ VFD", "48593"],
-  ["Dynamic Braking Overload Relay", "Drive", "LS Electric Manual Motor Starter / Overload Relay 32A High Break — Original: MMS-32H; Updated replacement: CMS-32H (same function, updated product line)", "CMS-32H"],
-  ["Load Match",          "Drive",           "LMII-10 Load Match Module for PE II 10:1 Step Up",      "3152008-003"],
-  ["Polycold 1100 HC (3CB/3CON)", "Drive",  "Polycold 1100 HC Cryochiller — 19.2 KW, 31 FLA, 3-Phase (Remote Controlled via PLC Slot 9)", "Not listed"],
+  ["Eurotherm 690+",      "Drive",           "Parker SSD AC Integrator 690+ Series VFD, 460VAC 25HP 3-Phase — Blower Drive (x2). Note: Eurotherm was acquired by Parker/SSD; same product, updated brand.", "55-0010-25", ""],
+  ["Advanced Energy PE II 10K", "Drive",     "CEX Drive / PE II 10K Generator 40kHz 10kW 208VAC",    "3157600-004", ""],
+  ["Fixture Drive Controller",  "Drive",     "Dart Motor Controller 1/8 to 1 HP (Fixture Drive)",    "253G-200C", ""],
+  ["—",                   "Drive",           "Dart Isolated Signal Follower for Dart Controller",     "55G2", ""],
+  ["Dynamic Braking",     "Drive",           "SSD Parker Dynamic Braking Resistor, 7.10A Overload, 22.5 Ohm Rating — for Parker 690+ VFD", "48593", ""],
+  ["Dynamic Braking Overload Relay", "Drive", "LS Electric Manual Motor Starter / Overload Relay 32A High Break — Original: MMS-32H; Updated replacement: CMS-32H (same function, updated product line)", "CMS-32H", ""],
+  ["Load Match",          "Drive",           "LMII-10 Load Match Module for PE II 10:1 Step Up",      "3152008-003", ""],
+  ["Polycold 1100 HC (3CB/3CON)", "Drive",  "Polycold 1100 HC Cryochiller — 19.2 KW, 31 FLA, 3-Phase (Remote Controlled via PLC Slot 9)", "Not listed", ""],
 
   // ── TRANSFORMERS ─────────────────────────────────────────────────────────
-  ["Transformer T1",      "Transformer",     "Acme Power Line Conditioner 1 KVA 480/120V AC 60Hz",    "T-1-4943I"],
-  ["Control Transformer T2", "Transformer",  "460/120V 2.0 KVA 50/60Hz Control Transformer",          "T20020-1"],
-  ["Transformer T3",      "Transformer",     "Acme Transformer 2 KVA 480/120V AC 50/60Hz",             "75-2-3000"],
-  ["Transformer T4",      "Transformer",     "15KVA Powertran 440-480V in / 208Y/120V out",           "PCE-3-15K-028-P"],
+  ["Transformer T1",      "Transformer",     "Acme Power Line Conditioner 1 KVA 480/120V AC 60Hz",    "T-1-4943I", ""],
+  ["Control Transformer T2", "Transformer",  "460/120V 2.0 KVA 50/60Hz Control Transformer",          "T20020-1", ""],
+  ["Transformer T3",      "Transformer",     "Acme Transformer 2 KVA 480/120V AC 50/60Hz",             "75-2-3000", ""],
+  ["Transformer T4",      "Transformer",     "15KVA Powertran 440-480V in / 208Y/120V out",           "PCE-3-15K-028-P", ""],
 
   // ── PLC / NETWORK ────────────────────────────────────────────────────────
-  ["Slot 0",              "PLC / Network",   "A-B SLC 5/05 PLC Processor (L553) — Primary Rack", "1747-L553"],
-  ["—",                   "PLC / Network",   "A-B 10-Slot Back Panel Chassis",                        "1746-A10"],
-  ["—",                   "PLC / Network",   "A-B 13-Slot Back Panel Chassis",                        "1746-A13"],
-  ["—",                   "PLC / Network",   "A-B PLC Rack Interconnect Cable 6\"",                   "1746-C7"],
-  ["—",                   "PLC / Network",   "A-B Slot Filler",                                       "1746-N2"],
-  ["Slot 17",             "PLC / Network",   "A-B RTD Input Module — PT-100 Diffusion Pump Oil Temp", "1746-NR4"],
-  ["Slot 15",             "PLC / Network",   "A-B 8-Channel Thermocouple Input Module — Mech Pump 1 & 2 Oil Temps, Diffusion Pump H2O, Polycold Coil In/Out/Cold Stack, Monomer Tank Temp", "1746-NT8"],
-  ["Slot 3",              "PLC / Network",   "A-B 16 Output Relay VAC/VDC — Cathode On Signals, Panel Indicators", "1746-OW16"],
-  ["Slot 4",              "PLC / Network",   "A-B 16 Output Relay VAC/VDC — Pump/Drive Enable, Fixture Drive, Valve Outputs", "1746-OW16"],
-  ["Slot 5",              "PLC / Network",   "A-B 16 Output Relay VAC/VDC — Valve Solenoid Outputs, Water Supply Relays", "1746-OW16"],
-  ["Slot 19",             "PLC / Network",   "A-B 16 Output Relay VAC/VDC — Pump 2 Enable, Blower 2 Enable, Work Light", "1746-OW16"],
-  ["Slot 6",              "PLC / Network",   "A-B 8 Output Isolated Relay VAC/VDC — Blower VFD Control, Plasma Power Supply Enable Outputs", "1746-OX8"],
-  ["Slot 9",              "PLC / Network",   "A-B 8 Output Isolated Relay VAC/VDC — MKS Flow Controller Close Signals, Polycold Remote", "1746-OX8"],
-  ["Slot 14",             "PLC / Network",   "A-B 8 Output Isolated Relay VAC/VDC — Ion Gauge On/Degas, Reset Error Left/Right PS", "1746-OX8"],
-  ["—",                   "PLC / Network",   "A-B Power Supply 175VA 13-Slot",                        "1746-P2"],
-  ["Slot 1",              "PLC / Network",   "A-B 24VDC Sinking Digital Input Card — Panel/Door Inputs, Process PBs, Pump Status", "1746-IB16"],
-  ["Slot 2",              "PLC / Network",   "A-B 24VDC Sinking Digital Input Card — Valve Position Inputs, Prox Sensors", "1746-IB16"],
-  ["Slot 16",             "PLC / Network",   "A-B 24VDC Sinking Digital Input Card — Water Flow Switch Inputs, PS Water OK", "1746-IB16"],
-  ["Slot 18",             "PLC / Network",   "A-B 24VDC Sinking Digital Input Card — Pump 2 Status, Chamber ATM/Vacuum", "1746-IB16"],
-  ["Slot 10",             "PLC / Network",   "A-B Analog Input Card 8-ch — AE PE II Output Power/Voltage Monitor, Ion Gauge, Convec Torr Gauge, Blower Ramp Monitor", "1746-NI8"],
-  ["Slot 11",             "PLC / Network",   "A-B Analog Input Card 8-ch — Omega FV105-T Cathode Flow/Temp (x4), Convec Torr Gauges (x3), Ion Gauge", "1746-NI8"],
-  ["Slot 12",             "PLC / Network",   "A-B Analog Input Card 8-ch — Left/Right Sputtering PS Output Power, Current, Voltage Monitor", "1746-NI8"],
-  ["Slot 13",             "PLC / Network",   "A-B Analog Input Card 8-ch — MKS Flow Feedback (Monomer, Argon, Gas 1–3), MKS Temp", "1746-NI8"],
-  ["Slot 7",              "PLC / Network",   "A-B Analog Output Card 8-ch — AE PE II Setpoint, Fixture Drive Speed, Blower Speed, Plasma Power Setpoints", "1746-NO8V"],
-  ["Slot 8",              "PLC / Network",   "A-B Analog Output Card 8-ch — MKS Flow Controller Setpoints (Monomer, Argon, Gas 1–3)", "1746-NO8V"],
-  ["—",                   "PLC / Network",   "A-B Power Block 600V 380A",                             "1492-PD31123"],
-  ["—",                   "PLC / Network",   "A-B Power Block 600V 335A",                             "1492-PD3163"],
-  ["—",                   "PLC / Network",   "A-B Cover for Distribution Block",                      "1492-PBC3"],
-  ["9300-RADES 4 Port Switch", "PLC / Network", "A-B Ethernet Modem / Switch 4-Port",                "9300-RADES"],
-  ["Wireless Ethernet Hub","PLC / Network",  "Wireless Ethernet Hub",                                 "Not listed"],
+  ["Slot 0",              "PLC / Network",   "A-B SLC 5/05 PLC Processor (L553) — Primary Rack", "1747-L553", ""],
+  ["—",                   "PLC / Network",   "A-B 10-Slot Back Panel Chassis",                        "1746-A10", ""],
+  ["—",                   "PLC / Network",   "A-B 13-Slot Back Panel Chassis",                        "1746-A13", ""],
+  ["—",                   "PLC / Network",   "A-B PLC Rack Interconnect Cable 6\"",                   "1746-C7", ""],
+  ["—",                   "PLC / Network",   "A-B Slot Filler",                                       "1746-N2", ""],
+  ["Slot 17",             "PLC / Network",   "A-B RTD Input Module — PT-100 Diffusion Pump Oil Temp", "1746-NR4", ""],
+  ["Slot 15",             "PLC / Network",   "A-B 8-Channel Thermocouple Input Module — Mech Pump 1 & 2 Oil Temps, Diffusion Pump H2O, Polycold Coil In/Out/Cold Stack, Monomer Tank Temp", "1746-NT8", ""],
+  ["Slot 3",              "PLC / Network",   "A-B 16 Output Relay VAC/VDC — Cathode On Signals, Panel Indicators", "1746-OW16", ""],
+  ["Slot 4",              "PLC / Network",   "A-B 16 Output Relay VAC/VDC — Pump/Drive Enable, Fixture Drive, Valve Outputs", "1746-OW16", ""],
+  ["Slot 5",              "PLC / Network",   "A-B 16 Output Relay VAC/VDC — Valve Solenoid Outputs, Water Supply Relays", "1746-OW16", ""],
+  ["Slot 19",             "PLC / Network",   "A-B 16 Output Relay VAC/VDC — Pump 2 Enable, Blower 2 Enable, Work Light", "1746-OW16", ""],
+  ["Slot 6",              "PLC / Network",   "A-B 8 Output Isolated Relay VAC/VDC — Blower VFD Control, Plasma Power Supply Enable Outputs", "1746-OX8", ""],
+  ["Slot 9",              "PLC / Network",   "A-B 8 Output Isolated Relay VAC/VDC — MKS Flow Controller Close Signals, Polycold Remote", "1746-OX8", ""],
+  ["Slot 14",             "PLC / Network",   "A-B 8 Output Isolated Relay VAC/VDC — Ion Gauge On/Degas, Reset Error Left/Right PS", "1746-OX8", ""],
+  ["—",                   "PLC / Network",   "A-B Power Supply 175VA 13-Slot",                        "1746-P2", ""],
+  ["Slot 1",              "PLC / Network",   "A-B 24VDC Sinking Digital Input Card — Panel/Door Inputs, Process PBs, Pump Status", "1746-IB16", ""],
+  ["Slot 2",              "PLC / Network",   "A-B 24VDC Sinking Digital Input Card — Valve Position Inputs, Prox Sensors", "1746-IB16", ""],
+  ["Slot 16",             "PLC / Network",   "A-B 24VDC Sinking Digital Input Card — Water Flow Switch Inputs, PS Water OK", "1746-IB16", ""],
+  ["Slot 18",             "PLC / Network",   "A-B 24VDC Sinking Digital Input Card — Pump 2 Status, Chamber ATM/Vacuum", "1746-IB16", ""],
+  ["Slot 10",             "PLC / Network",   "A-B Analog Input Card 8-ch — AE PE II Output Power/Voltage Monitor, Ion Gauge, Convec Torr Gauge, Blower Ramp Monitor", "1746-NI8", ""],
+  ["Slot 11",             "PLC / Network",   "A-B Analog Input Card 8-ch — Omega FV105-T Cathode Flow/Temp (x4), Convec Torr Gauges (x3), Ion Gauge", "1746-NI8", ""],
+  ["Slot 12",             "PLC / Network",   "A-B Analog Input Card 8-ch — Left/Right Sputtering PS Output Power, Current, Voltage Monitor", "1746-NI8", ""],
+  ["Slot 13",             "PLC / Network",   "A-B Analog Input Card 8-ch — MKS Flow Feedback (Monomer, Argon, Gas 1–3), MKS Temp", "1746-NI8", ""],
+  ["Slot 7",              "PLC / Network",   "A-B Analog Output Card 8-ch — AE PE II Setpoint, Fixture Drive Speed, Blower Speed, Plasma Power Setpoints", "1746-NO8V", ""],
+  ["Slot 8",              "PLC / Network",   "A-B Analog Output Card 8-ch — MKS Flow Controller Setpoints (Monomer, Argon, Gas 1–3)", "1746-NO8V", ""],
+  ["—",                   "PLC / Network",   "A-B Power Block 600V 380A",                             "1492-PD31123", ""],
+  ["—",                   "PLC / Network",   "A-B Power Block 600V 335A",                             "1492-PD3163", ""],
+  ["—",                   "PLC / Network",   "A-B Cover for Distribution Block",                      "1492-PBC3", ""],
+  ["9300-RADES 4 Port Switch", "PLC / Network", "A-B Ethernet Modem / Switch 4-Port",                "9300-RADES", ""],
+  ["Wireless Ethernet Hub","PLC / Network",  "Wireless Ethernet Hub",                                 "Not listed", ""],
 
   // ── FLOW CONTROLLERS ─────────────────────────────────────────────────────
-  ["MKS 1150",            "Flow Controller", "MKS 1150C Monomer Vapor Flow Controller, Pressure-based w/ Heat", "1150C-4304V"],
-  ["MKS 1179 (Gas 1, Gas 2, Gas 3)", "Flow Controller", "MKS Mass-Flo Gas Flow Controller 1K SCCM 1/4\" (x3 — Gas 1/2/3)", "1179A01313CS1BV"],
-  ["MKS 1179 (Argon)",    "Flow Controller", "MKS Mass-Flo Gas Flow Controller 2K SCCM 1/4\" (Argon sputtering channel)", "1179A01323CS1BV"],
+  ["MKS 1150",            "Flow Controller", "MKS 1150C Monomer Vapor Flow Controller, Pressure-based w/ Heat", "1150C-4304V", ""],
+  ["MKS 1179 (Gas 1, Gas 2, Gas 3)", "Flow Controller", "MKS Mass-Flo Gas Flow Controller 1K SCCM 1/4\" (x3 — Gas 1/2/3)", "1179A01313CS1BV", ""],
+  ["MKS 1179 (Argon)",    "Flow Controller", "MKS Mass-Flo Gas Flow Controller 2K SCCM 1/4\" (Argon sputtering channel)", "1179A01323CS1BV", ""],
 
   // ── GAUGES / SENSORS ─────────────────────────────────────────────────────
-  ["Convectron Torr Gauge (x3)", "Gauge / Sensor", "Eyesys ConvecTorr Active Gauge NW16 — Mechanical Pump, Foreline, Chamber Pressure (x3 total)", "L97363000220"],
-  ["—",                   "Gauge / Sensor",  "Granville Phillips Series 275 Mini-Convectron Gauge",   "275806-EU"],
-  ["Granville Phillips Ion Gauge", "Gauge / Sensor", "347D Stabil Ion Gauge Module ANA O/P 360120 STD", "347008"],
-  ["—",                   "Gauge / Sensor",  "Stabil Ion Gauge Tube STD Conflat",                     "360120"],
-  ["—",                   "Gauge / Sensor",  "Capacitance Manometer (Optional Chamber Pressure Gauge)","365-011"],
-  ["Omega FV105-T (x4)",  "Gauge / Sensor",  "Omega 1/2\" FNPT 10–100 GPM Flow/Temp Sensor — Cathode 1 Flow, Cathode 1 Temp, Cathode 2 Flow, Cathode 2 Temp (x4 total)", "FV105-T"],
-  ["Inficon Vacuum Switch","Gauge / Sensor",  "Leybold PS113A Low Pressure Safety Switch (replaces Inficon unit)",  "230011"],
-  ["—",                   "Gauge / Sensor",  "Air Pressure Switch",                                   "130P13C3B"],
-  ["—",                   "Gauge / Sensor",  "T/C Assembly Type K 1/4\" DIA 3' Aluminum Head Ungrounded","NB2CASS14U3"],
-  ["Door Switch",         "Gauge / Sensor",  "Schmersal Door Switch with 2 NC Contacts (Cathode Doors)","AZM170SK-02ZRKA"],
-  ["—",                   "Gauge / Sensor",  "Schmersal Key (Cathode Doors)",                         "AZM170-B6"],
-  ["—",                   "Gauge / Sensor",  "Schmersal Door Switch — Chamber Right",                 "BNS 260-02/01z-ST-R"],
-  ["—",                   "Gauge / Sensor",  "Schmersal Door Switch — Chamber Left",                  "BNS 260-02/01z-ST-L"],
-  ["—",                   "Gauge / Sensor",  "Schmersal Coded Magnet for Chamber Door",               "BPS 260-1"],
-  ["—",                   "Gauge / Sensor",  "Schmersal Cable for Chamber Door Switch",               "A-K6P-M8-R-G-10M-GY-1-X-A-4"],
-  ["—",                   "Gauge / Sensor",  "Float Level Switch — Monomer Supply Tank",              "LS1750"],
-  ["—",                   "Gauge / Sensor",  "Float Switch (Double for Monomer Reservoir)",           "LS800-3-SS-SPDT-20-GR"],
-  ["—",                   "Gauge / Sensor",  "Omron 12MM Prox Extended Barrel (Fixture Rotation)",    "E2E2-X5MB1-M1"],
-  ["—",                   "Gauge / Sensor",  "NW16 O-Ring for Convector Gauge Clamps (x2)",           "MVSNW16CR"],
-  ["—",                   "Gauge / Sensor",  "NW40 O-Ring for Ion Gauge Clamps (x2)",                 "MVSNW40CR"],
-  ["—",                   "Gauge / Sensor",  "Copper O-Ring for Ion Gauge Tube",                      "275-175-CG"],
+  ["Convectron Torr Gauge (x3)", "Gauge / Sensor", "Eyesys ConvecTorr Active Gauge NW16 — Mechanical Pump, Foreline, Chamber Pressure (x3 total)", "L97363000220", ""],
+  ["—",                   "Gauge / Sensor",  "Granville Phillips Series 275 Mini-Convectron Gauge",   "275806-EU", ""],
+  ["Granville Phillips Ion Gauge", "Gauge / Sensor", "347D Stabil Ion Gauge Module ANA O/P 360120 STD", "347008", ""],
+  ["—",                   "Gauge / Sensor",  "Stabil Ion Gauge Tube STD Conflat",                     "360120", ""],
+  ["—",                   "Gauge / Sensor",  "Capacitance Manometer (Optional Chamber Pressure Gauge)","365-011", ""],
+  ["Omega FV105-T (x4)",  "Gauge / Sensor",  "Omega 1/2\" FNPT 10–100 GPM Flow/Temp Sensor — Cathode 1 Flow, Cathode 1 Temp, Cathode 2 Flow, Cathode 2 Temp (x4 total)", "FV105-T", ""],
+  ["Inficon Vacuum Switch","Gauge / Sensor",  "Leybold PS113A Low Pressure Safety Switch (replaces Inficon unit)",  "230011", ""],
+  ["—",                   "Gauge / Sensor",  "Air Pressure Switch",                                   "130P13C3B", ""],
+  ["—",                   "Gauge / Sensor",  "T/C Assembly Type K 1/4\" DIA 3' Aluminum Head Ungrounded","NB2CASS14U3", ""],
+  ["Door Switch",         "Gauge / Sensor",  "Schmersal Door Switch with 2 NC Contacts (Cathode Doors)","AZM170SK-02ZRKA", ""],
+  ["—",                   "Gauge / Sensor",  "Schmersal Key (Cathode Doors)",                         "AZM170-B6", ""],
+  ["—",                   "Gauge / Sensor",  "Schmersal Door Switch — Chamber Right",                 "BNS 260-02/01z-ST-R", ""],
+  ["—",                   "Gauge / Sensor",  "Schmersal Door Switch — Chamber Left",                  "BNS 260-02/01z-ST-L", ""],
+  ["—",                   "Gauge / Sensor",  "Schmersal Coded Magnet for Chamber Door",               "BPS 260-1", ""],
+  ["—",                   "Gauge / Sensor",  "Schmersal Cable for Chamber Door Switch",               "A-K6P-M8-R-G-10M-GY-1-X-A-4", ""],
+  ["—",                   "Gauge / Sensor",  "Float Level Switch — Monomer Supply Tank",              "LS1750", ""],
+  ["—",                   "Gauge / Sensor",  "Float Switch (Double for Monomer Reservoir)",           "LS800-3-SS-SPDT-20-GR", ""],
+  ["—",                   "Gauge / Sensor",  "Omron 12MM Prox Extended Barrel (Fixture Rotation)",    "E2E2-X5MB1-M1", ""],
+  ["—",                   "Gauge / Sensor",  "NW16 O-Ring for Convector Gauge Clamps (x2)",           "MVSNW16CR", ""],
+  ["—",                   "Gauge / Sensor",  "NW40 O-Ring for Ion Gauge Clamps (x2)",                 "MVSNW40CR", ""],
+  ["—",                   "Gauge / Sensor",  "Copper O-Ring for Ion Gauge Tube",                      "275-175-CG", ""],
 
   // ── PLASMA POWER SUPPLIES ────────────────────────────────────────────────
-  ["9CON",  "Power Supply",    "TruPlasma DC 3030 — 30kW DC Plasma Power Supply (TRUMPF Hüttinger), Master/Slave Units for Left & Right Sputtering Cathodes (x6 + 1 spare)",  "1609729"],
-  ["10CON",  "Power Supply",    "TruPlasma DC 3030 — 30kW DC Plasma Power Supply (TRUMPF Hüttinger), 1st Slave, Left Sputtering Cathode #1", "1609729"],
-  ["11CON",  "Power Supply",    "TruPlasma DC 3030 — 30kW DC Plasma Power Supply (TRUMPF Hüttinger), 2nd Slave, Left Sputtering Cathode #1", "1609729"],
-  ["13CON","Power Supply",    "TruPlasma DC 3030 — 30kW DC Plasma Power Supply (TRUMPF Hüttinger), Master, Right Sputtering Cathode #2", "1609729"],
-  ["14CON", "Power Supply",    "TruPlasma DC 3030 — 30kW DC Plasma Power Supply (TRUMPF Hüttinger), 1st Slave, Right Sputtering Cathode #2", "1609729"],
-  ["15CON", "Power Supply",    "TruPlasma DC 3030 — 30kW DC Plasma Power Supply (TRUMPF Hüttinger), 2nd Slave, Right Sputtering Cathode #2", "1609729"],
-  ["—",                   "Power Supply",    "TruPlasma DC 3030 — 30kW Replacement Unit, Master or Slave Compatible (TRUMPF Hüttinger)", "1609729"],
+  ["9CON",  "Power Supply",    "TruPlasma DC 3030 — 30kW DC Plasma Power Supply (TRUMPF Hüttinger), Master/Slave Units for Left & Right Sputtering Cathodes (x6 + 1 spare)",  "1609729", ""],
+  ["10CON",  "Power Supply",    "TruPlasma DC 3030 — 30kW DC Plasma Power Supply (TRUMPF Hüttinger), 1st Slave, Left Sputtering Cathode #1", "1609729", ""],
+  ["11CON",  "Power Supply",    "TruPlasma DC 3030 — 30kW DC Plasma Power Supply (TRUMPF Hüttinger), 2nd Slave, Left Sputtering Cathode #1", "1609729", ""],
+  ["13CON","Power Supply",    "TruPlasma DC 3030 — 30kW DC Plasma Power Supply (TRUMPF Hüttinger), Master, Right Sputtering Cathode #2", "1609729", ""],
+  ["14CON", "Power Supply",    "TruPlasma DC 3030 — 30kW DC Plasma Power Supply (TRUMPF Hüttinger), 1st Slave, Right Sputtering Cathode #2", "1609729", ""],
+  ["15CON", "Power Supply",    "TruPlasma DC 3030 — 30kW DC Plasma Power Supply (TRUMPF Hüttinger), 2nd Slave, Right Sputtering Cathode #2", "1609729", ""],
+  ["—",                   "Power Supply",    "TruPlasma DC 3030 — 30kW Replacement Unit, Master or Slave Compatible (TRUMPF Hüttinger)", "1609729", ""],
 
   // ── CATHODE ───────────────────────────────────────────────────────────────
-  ["—",                   "Cathode",         "6'x54\" Flange Mount Cathode Assembly",                 "234"],
-  ["—",                   "Cathode",         "6\"x54\" Cathode Center Post",                          "237"],
-  ["—",                   "Cathode",         "6\"x54\" Cathode Copper Backing Plate",                 "238"],
-  ["—",                   "Cathode",         "6\"x54\" Cathode Magnetic Array 6x54",                  "287"],
-  ["—",                   "Cathode",         "6\"x54\" Cathode Copper Retaining Rails Set",           "00-02-0285"],
-  ["—",                   "Cathode",         "6\"x54\" Cathode Insert Fastener",                      "00-02-0387"],
-  ["—",                   "Cathode",         "6\"x54\" Cathode Stud for Flanges",                     "00-02-0386"],
-  ["—",                   "Cathode",         "Cathode Rebuild Kit — All Insulators and Seals (x2)",   "MVS6X54REBUILD"],
-  ["—",                   "Cathode",         "6\"x54\" Cathode Backing Plate O-Ring",                 "C48654BP"],
-  ["—",                   "Cathode",         "6\"x54\" Cathode Flange O-Ring",                        "C48654CF"],
-  ["—",                   "Cathode",         "6\"x54\" Cathode Center Post O-Ring",                   "C48654CP"],
-  ["—",                   "Cathode",         "6\"x54\" Cathode Water Tube O-Ring",                    "C48654WT"],
-  ["—",                   "Cathode",         "6\"x54\" Cathode Target Rails Set — 3-Piece (x2)",      "00-02-0278"],
-  ["—",                   "Cathode",         "6\"x54\" Cathode Water Tube",                           "211A"],
-  ["—",                   "Cathode",         "6\"x54\" Cathode Water Assembly (Lower)",               "MVSWTA"],
-  ["—",                   "Cathode",         "6\"x54\" Cathode Electrical Socket (Red)",              "RP250GR"],
-  ["—",                   "Cathode",         "6\"x54\" Cathode Electrical Socket (Black)",            "RP250GB"],
-  ["—",                   "Cathode",         "6\"x54\" Cathode Copper Bar for Electrical Connection", "03-02-0392"],
-  ["—",                   "Cathode",         "High Voltage Feedthru on 2' BP Assembly — Mustang Design (x4)", "A4475-2-BP"],
-  ["—",                   "Cathode",         "High Voltage Feedthru O-Ring",                         "10KVHVF"],
-  ["—",                   "Cathode",         "Plasma Retainer Ring for A4475-2-BP",                   "03-02-0307"],
-  ["—",                   "Cathode",         "Plasma Cup for A4475-2-BP",                             "03-02-0308"],
+  ["—",                   "Cathode",         "6'x54\" Flange Mount Cathode Assembly",                 "234", ""],
+  ["—",                   "Cathode",         "6\"x54\" Cathode Center Post",                          "237", ""],
+  ["—",                   "Cathode",         "6\"x54\" Cathode Copper Backing Plate",                 "238", ""],
+  ["—",                   "Cathode",         "6\"x54\" Cathode Magnetic Array 6x54",                  "287", ""],
+  ["—",                   "Cathode",         "6\"x54\" Cathode Copper Retaining Rails Set",           "00-02-0285", ""],
+  ["—",                   "Cathode",         "6\"x54\" Cathode Insert Fastener",                      "00-02-0387", ""],
+  ["—",                   "Cathode",         "6\"x54\" Cathode Stud for Flanges",                     "00-02-0386", ""],
+  ["—",                   "Cathode",         "Cathode Rebuild Kit — All Insulators and Seals (x2)",   "MVS6X54REBUILD", ""],
+  ["—",                   "Cathode",         "6\"x54\" Cathode Backing Plate O-Ring",                 "C48654BP", ""],
+  ["—",                   "Cathode",         "6\"x54\" Cathode Flange O-Ring",                        "C48654CF", ""],
+  ["—",                   "Cathode",         "6\"x54\" Cathode Center Post O-Ring",                   "C48654CP", ""],
+  ["—",                   "Cathode",         "6\"x54\" Cathode Water Tube O-Ring",                    "C48654WT", ""],
+  ["—",                   "Cathode",         "6\"x54\" Cathode Target Rails Set — 3-Piece (x2)",      "00-02-0278", ""],
+  ["—",                   "Cathode",         "6\"x54\" Cathode Water Tube",                           "211A", ""],
+  ["—",                   "Cathode",         "6\"x54\" Cathode Water Assembly (Lower)",               "MVSWTA", ""],
+  ["—",                   "Cathode",         "6\"x54\" Cathode Electrical Socket (Red)",              "RP250GR", ""],
+  ["—",                   "Cathode",         "6\"x54\" Cathode Electrical Socket (Black)",            "RP250GB", ""],
+  ["—",                   "Cathode",         "6\"x54\" Cathode Copper Bar for Electrical Connection", "03-02-0392", ""],
+  ["—",                   "Cathode",         "High Voltage Feedthru on 2' BP Assembly — Mustang Design (x4)", "A4475-2-BP", ""],
+  ["—",                   "Cathode",         "High Voltage Feedthru O-Ring",                         "10KVHVF", ""],
+  ["—",                   "Cathode",         "Plasma Retainer Ring for A4475-2-BP",                   "03-02-0307", ""],
+  ["—",                   "Cathode",         "Plasma Cup for A4475-2-BP",                             "03-02-0308", ""],
 
   // ── O-RINGS / SEALS / FLANGES ─────────────────────────────────────────────
-  ["—",                   "O-Ring / Seal",   "6\" ASA Flange Gasket",                                 "6RRG"],
-  ["—",                   "O-Ring / Seal",   "8\" ASA Flange Gasket",                                 "8RRG"],
-  ["—",                   "O-Ring / Seal",   "Colt 4828 Chamber Flange O-Ring",                       "C4828CF"],
-  ["—",                   "O-Ring / Seal",   "16\" Polypod Bonnet Plate O-Ring",                      "C4816BP"],
-  ["—",                   "O-Ring / Seal",   "16\" Polypod Back Plate O-Ring",                        "C4816PBP"],
-  ["—",                   "O-Ring / Seal",   "16\" Polypod Flange O-Ring",                            "C4816PF"],
-  ["—",                   "O-Ring / Seal",   "16\" Polypod Valve O-Ring",                             "C4816PV"],
-  ["—",                   "O-Ring / Seal",   "Diffusion Pump Poppet Valve O-Ring",                    "C4820PV"],
-  ["—",                   "O-Ring / Seal",   "Diffusion Pump Fill/Drain O-Ring",                      "20DPFD"],
-  ["—",                   "O-Ring / Seal",   "Diffusion Pump Foreline Flange O-Ring",                 "20DPFL"],
-  ["—",                   "O-Ring / Seal",   "Diffusion Pump Top Flange O-Ring",                      "20DPTF"],
-  ["—",                   "O-Ring / Seal",   "Monomer Tank Flange O-Ring",                            "C48MTF"],
-  ["—",                   "O-Ring / Seal",   "Hi-Vac Bronze Bushing Inner O-Ring",                    "C48BBHVIB"],
-  ["—",                   "O-Ring / Seal",   "Hi-Vac Bronze Bushing Outer O-Ring",                    "C48BBHVOB"],
-  ["—",                   "O-Ring / Seal",   "Mechanical Pump to Blower Bellows Base O-Ring",         "HV5000BBB-H"],
-  ["—",                   "O-Ring / Seal",   "Mechanical Pump to Blower Bellows Top O-Ring",          "HV5000BBT-H"],
-  ["—",                   "O-Ring / Seal",   "Fixture Drive Feedthru O-Ring",                         "C48750FF"],
-  ["—",                   "O-Ring / Seal",   "Colt 4828 View Port O-Ring for Door (x2)",              "MVSVPOR"],
-  ["—",                   "O-Ring / Seal",   "16\" Polypod Gate Valve Bellows Repair Kit",            "KBB16S-96"],
-  ["—",                   "O-Ring / Seal",   "ISO Centering Ring 6\" for Roughing and Foreline Valves (x2)", "LF160-600-AR-B"],
-  ["—",                   "O-Ring / Seal",   "ISO Centering Ring 3\" for Polypod Rough (x2)",         "LF63-250-AR-B"],
-  ["—",                   "O-Ring / Seal",   "Bearing Kit for Gears Inside Chamber",                  "MVSGTABK"],
-  ["—",                   "O-Ring / Seal",   "Tooling Bearing for Door Pins (NBX3530Z + LRT303520)",  "NBX3530Z"],
+  ["—",                   "O-Ring / Seal",   "6\" ASA Flange Gasket",                                 "6RRG", ""],
+  ["—",                   "O-Ring / Seal",   "8\" ASA Flange Gasket",                                 "8RRG", ""],
+  ["—",                   "O-Ring / Seal",   "Colt 4828 Chamber Flange O-Ring",                       "C4828CF", ""],
+  ["—",                   "O-Ring / Seal",   "16\" Polypod Bonnet Plate O-Ring",                      "C4816BP", ""],
+  ["—",                   "O-Ring / Seal",   "16\" Polypod Back Plate O-Ring",                        "C4816PBP", ""],
+  ["—",                   "O-Ring / Seal",   "16\" Polypod Flange O-Ring",                            "C4816PF", ""],
+  ["—",                   "O-Ring / Seal",   "16\" Polypod Valve O-Ring",                             "C4816PV", ""],
+  ["—",                   "O-Ring / Seal",   "Diffusion Pump Poppet Valve O-Ring",                    "C4820PV", ""],
+  ["—",                   "O-Ring / Seal",   "Diffusion Pump Fill/Drain O-Ring",                      "20DPFD", ""],
+  ["—",                   "O-Ring / Seal",   "Diffusion Pump Foreline Flange O-Ring",                 "20DPFL", ""],
+  ["—",                   "O-Ring / Seal",   "Diffusion Pump Top Flange O-Ring",                      "20DPTF", ""],
+  ["—",                   "O-Ring / Seal",   "Monomer Tank Flange O-Ring",                            "C48MTF", ""],
+  ["—",                   "O-Ring / Seal",   "Hi-Vac Bronze Bushing Inner O-Ring",                    "C48BBHVIB", ""],
+  ["—",                   "O-Ring / Seal",   "Hi-Vac Bronze Bushing Outer O-Ring",                    "C48BBHVOB", ""],
+  ["—",                   "O-Ring / Seal",   "Mechanical Pump to Blower Bellows Base O-Ring",         "HV5000BBB-H", ""],
+  ["—",                   "O-Ring / Seal",   "Mechanical Pump to Blower Bellows Top O-Ring",          "HV5000BBT-H", ""],
+  ["—",                   "O-Ring / Seal",   "Fixture Drive Feedthru O-Ring",                         "C48750FF", ""],
+  ["—",                   "O-Ring / Seal",   "Colt 4828 View Port O-Ring for Door (x2)",              "MVSVPOR", ""],
+  ["—",                   "O-Ring / Seal",   "16\" Polypod Gate Valve Bellows Repair Kit",            "KBB16S-96", ""],
+  ["—",                   "O-Ring / Seal",   "ISO Centering Ring 6\" for Roughing and Foreline Valves (x2)", "LF160-600-AR-B", ""],
+  ["—",                   "O-Ring / Seal",   "ISO Centering Ring 3\" for Polypod Rough (x2)",         "LF63-250-AR-B", ""],
+  ["—",                   "O-Ring / Seal",   "Bearing Kit for Gears Inside Chamber",                  "MVSGTABK", ""],
+  ["—",                   "O-Ring / Seal",   "Tooling Bearing for Door Pins (NBX3530Z + LRT303520)",  "NBX3530Z", ""],
 
   // ── VALVES / PNEUMATICS ───────────────────────────────────────────────────
-  ["—",                   "Valve / Pneumatic", "16\" Polypod Gate Valve — GV 16.0 LLF PNU",          "31210-1601rx-001"],
-  ["—",                   "Valve / Pneumatic", "Actuator for Polypod Gate Valve",                     "09268"],
-  ["—",                   "Valve / Pneumatic", "ISO-63 Right Angle Valve (SMC)",                      "XLA-63-M9"],
-  ["—",                   "Valve / Pneumatic", "ISO-160 Right Angle Valve (SMC)",                     "XLA-160DA-M9"],
-  ["—",                   "Valve / Pneumatic", "KF-40 Right Angle Valve (SMC)",                       "XLA-40-F9"],
-  ["—",                   "Valve / Pneumatic", "Roughing Gauge Isolation Valve NW16",                 "XLA-16-M9"],
-  ["—",                   "Valve / Pneumatic", "2\" Solenoid Valve 24VDC Air — Magnatrol Vent",       "36A47-A"],
-  ["—",                   "Valve / Pneumatic", "Dayton Solenoid 24VDC (Water Manifold)",              "3PU18"],
-  ["—",                   "Valve / Pneumatic", "3/8 NPT Solenoid Valve Body (for use with 3PU18)",    "4A700"],
-  ["—",                   "Valve / Pneumatic", "Double-Acting Pneumatic Actuator CTD30 (Cathode Water)","AS1004B"],
-  ["—",                   "Valve / Pneumatic", "1/2\" Check Valve for Gas Ballast on SV630/SV1200",  "9634122"],
-  ["—",                   "Valve / Pneumatic", "1/2\" SS Ball Valve (Pneumatic) — SMC Water Manifold","AS2000/2700A"],
-  ["—",                   "Valve / Pneumatic", "Series-1 Actuator Valve 3/8 (Polymer Cabinet)",      "SS6BK1C"],
-  ["—",                   "Valve / Pneumatic", "Bellows Sealed Valve 1/2\" (Polypod Purge Valve)",   "SS8BK1C"],
-  ["—",                   "Valve / Pneumatic", "Solenoid Valve Large Air Manifold 24VDC (SMC)",       "SV2100-5FUD"],
-  ["—",                   "Valve / Pneumatic", "Solenoid Valve Small Air Manifold 24VDC (SMC)",       "SV1A00-5FU"],
-  ["—",                   "Valve / Pneumatic", "TRD Hi-Vac Cylinder with Rod Extension",             "TRD TA-MF14X217/8-KK2-MPR-OS13"],
-  ["—",                   "Valve / Pneumatic", "24VDC Prox for Hi-Vac Cylinder (TRD)",               "TRD-RS02-DC-SB510"],
-  ["—",                   "Valve / Pneumatic", "Hi-Vac Cylinder Repair Kit (TRD)",                   "SK-137-400"],
-  ["—",                   "Valve / Pneumatic", "SMC Hi-Vac Cylinder 4\" BORE x 21.88\" Stroke",      "NCDA1F400-2188-DUN03070"],
-  ["—",                   "Valve / Pneumatic", "Hi-Vac Cylinder Repair Kit (SMC)",                   "NC1A400-PS-XB5"],
-  ["—",                   "Valve / Pneumatic", "Prox Sensors for Hi-Vac Cylinder (SMC)",             "D A53Z"],
-  ["—",                   "Valve / Pneumatic", "Watts Pressure Regulator (Cathode Water)",            "U5B-Z3"],
+  ["—",                   "Valve / Pneumatic", "16\" Polypod Gate Valve — GV 16.0 LLF PNU",          "31210-1601rx-001", ""],
+  ["—",                   "Valve / Pneumatic", "Actuator for Polypod Gate Valve",                     "09268", ""],
+  ["—",                   "Valve / Pneumatic", "ISO-63 Right Angle Valve (SMC)",                      "XLA-63-M9", ""],
+  ["—",                   "Valve / Pneumatic", "ISO-160 Right Angle Valve (SMC)",                     "XLA-160DA-M9", ""],
+  ["—",                   "Valve / Pneumatic", "KF-40 Right Angle Valve (SMC)",                       "XLA-40-F9", ""],
+  ["—",                   "Valve / Pneumatic", "Roughing Gauge Isolation Valve NW16",                 "XLA-16-M9", ""],
+  ["—",                   "Valve / Pneumatic", "2\" Solenoid Valve 24VDC Air — Magnatrol Vent",       "36A47-A", ""],
+  ["—",                   "Valve / Pneumatic", "Dayton Solenoid 24VDC (Water Manifold)",              "3PU18", ""],
+  ["—",                   "Valve / Pneumatic", "3/8 NPT Solenoid Valve Body (for use with 3PU18)",    "4A700", ""],
+  ["—",                   "Valve / Pneumatic", "Double-Acting Pneumatic Actuator CTD30 (Cathode Water)","AS1004B", ""],
+  ["—",                   "Valve / Pneumatic", "1/2\" Check Valve for Gas Ballast on SV630/SV1200",  "9634122", ""],
+  ["—",                   "Valve / Pneumatic", "1/2\" SS Ball Valve (Pneumatic) — SMC Water Manifold","AS2000/2700A", ""],
+  ["—",                   "Valve / Pneumatic", "Series-1 Actuator Valve 3/8 (Polymer Cabinet)",      "SS6BK1C", ""],
+  ["—",                   "Valve / Pneumatic", "Bellows Sealed Valve 1/2\" (Polypod Purge Valve)",   "SS8BK1C", ""],
+  ["—",                   "Valve / Pneumatic", "Solenoid Valve Large Air Manifold 24VDC (SMC)",       "SV2100-5FUD", ""],
+  ["—",                   "Valve / Pneumatic", "Solenoid Valve Small Air Manifold 24VDC (SMC)",       "SV1A00-5FU", ""],
+  ["—",                   "Valve / Pneumatic", "TRD Hi-Vac Cylinder with Rod Extension",             "TRD TA-MF14X217/8-KK2-MPR-OS13", ""],
+  ["—",                   "Valve / Pneumatic", "24VDC Prox for Hi-Vac Cylinder (TRD)",               "TRD-RS02-DC-SB510", ""],
+  ["—",                   "Valve / Pneumatic", "Hi-Vac Cylinder Repair Kit (TRD)",                   "SK-137-400", ""],
+  ["—",                   "Valve / Pneumatic", "SMC Hi-Vac Cylinder 4\" BORE x 21.88\" Stroke",      "NCDA1F400-2188-DUN03070", ""],
+  ["—",                   "Valve / Pneumatic", "Hi-Vac Cylinder Repair Kit (SMC)",                   "NC1A400-PS-XB5", ""],
+  ["—",                   "Valve / Pneumatic", "Prox Sensors for Hi-Vac Cylinder (SMC)",             "D A53Z", ""],
+  ["—",                   "Valve / Pneumatic", "Watts Pressure Regulator (Cathode Water)",            "U5B-Z3", ""],
 
   // ── WATER / MANIFOLDS ─────────────────────────────────────────────────────
-  ["—",                   "Water / Manifold", "8-Zone Water Manifold with 1-1/4\" Inlet",            "FSML800M30"],
-  ["—",                   "Water / Manifold", "6-Zone Water Manifold with 1/4\" Inlet",              "FSML600M"],
-  ["—",                   "Water / Manifold", "Flow Switch — replaces Gems 25363 Water Manifold",    "1500-18542"],
-  ["—",                   "Water / Manifold", "Flow Switch for SMC Water Manifolds",                 "PF3W740S-N04-BN-G"],
-  ["—",                   "Water / Manifold", "SS5V1 1/4\" Dual 3-Way N.C. Air Manifold (SMC)",      "SS5V1-10FD1-04B-N7-D"],
-  ["—",                   "Water / Manifold", "14-Station Air Manifold Assembly 1/4\" (SMC)",        "SS5V2-10FD1-14B-N7-DO"],
-  ["—",                   "Water / Manifold", "Wilkerson Air Dryer",                                 "DE4-AE-KPO-7J24"],
-  ["—",                   "Water / Manifold", "SMC Air Dryer",                                       "IDW25N"],
+  ["—",                   "Water / Manifold", "8-Zone Water Manifold with 1-1/4\" Inlet",            "FSML800M30", ""],
+  ["—",                   "Water / Manifold", "6-Zone Water Manifold with 1/4\" Inlet",              "FSML600M", ""],
+  ["—",                   "Water / Manifold", "Flow Switch — replaces Gems 25363 Water Manifold",    "1500-18542", ""],
+  ["—",                   "Water / Manifold", "Flow Switch for SMC Water Manifolds",                 "PF3W740S-N04-BN-G", ""],
+  ["—",                   "Water / Manifold", "SS5V1 1/4\" Dual 3-Way N.C. Air Manifold (SMC)",      "SS5V1-10FD1-04B-N7-D", ""],
+  ["—",                   "Water / Manifold", "14-Station Air Manifold Assembly 1/4\" (SMC)",        "SS5V2-10FD1-14B-N7-DO", ""],
+  ["—",                   "Water / Manifold", "Wilkerson Air Dryer",                                 "DE4-AE-KPO-7J24", ""],
+  ["—",                   "Water / Manifold", "SMC Air Dryer",                                       "IDW25N", ""],
 
   // ── VACUUM PUMPS ─────────────────────────────────────────────────────────
-  ["Stokes Blower 1 & 2", "Vacuum Pump",     "Stokes Blower 15 HP, 18.5 FLA (x2) — Eurotherm 690+ VFD Driven", "Not listed"],
-  ["Mechanical Roughing Pump 1 & 2", "Vacuum Pump", "Mechanical Roughing Pump 10 HP, 12.4 FLA, 7.46 KW (x2) — 1CB/1ACB", "Not listed"],
-  ["Diffusion Pump",      "Vacuum Pump",     "HS-20 Diffusion Pump 480VAC Water-Cooled with Thermo-well and RTD Installed, 12 KW, 14.5 FLA — 17CB Feed", "84341609"],
-  ["—",                   "Vacuum Pump",     "SV1200 Water-cooled 480/3/60 Motor (Mech Pump)",        "SV1200"],
-  ["—",                   "Vacuum Pump",     "Oerlikon SV630 Water-cooled 480/3/60 (Mech Pump)",      "SV630"],
-  ["—",                   "Vacuum Pump",     "412J Microvac 230/460V 60Hz — Edwards Mech Pump",       "412J"],
-  ["—",                   "Vacuum Pump",     "615-MV15 Vert Supblo Dir Drive — Edwards Blower",       "615-MV15"],
-  ["—",                   "Vacuum Pump",     "Oerlikon WH4400 Frequency Driven Booster Pump 7040 m3hr","WH4400"],
-  ["—",                   "Vacuum Pump",     "Diffusion Pump Repair Kit (Seals)",                     "K0377165"],
-  ["—",                   "Vacuum Pump",     "Diffusion Pump Oil 704, 1 Gallon",                      "FT 704"],
-  ["—",                   "Vacuum Pump",     "VACUUM PKG with 20HP TENV Motor",                       "HV5000"],
+  ["Stokes Blower 1 & 2", "Vacuum Pump",     "Stokes Blower 15 HP, 18.5 FLA (x2) — Eurotherm 690+ VFD Driven", "Not listed", ""],
+  ["Mechanical Roughing Pump 1 & 2", "Vacuum Pump", "Mechanical Roughing Pump 10 HP, 12.4 FLA, 7.46 KW (x2) — 1CB/1ACB", "Not listed", ""],
+  ["Diffusion Pump",      "Vacuum Pump",     "HS-20 Diffusion Pump 480VAC Water-Cooled with Thermo-well and RTD Installed, 12 KW, 14.5 FLA — 17CB Feed", "84341609", ""],
+  ["—",                   "Vacuum Pump",     "SV1200 Water-cooled 480/3/60 Motor (Mech Pump)",        "SV1200", ""],
+  ["—",                   "Vacuum Pump",     "Oerlikon SV630 Water-cooled 480/3/60 (Mech Pump)",      "SV630", ""],
+  ["—",                   "Vacuum Pump",     "412J Microvac 230/460V 60Hz — Edwards Mech Pump",       "412J", ""],
+  ["—",                   "Vacuum Pump",     "615-MV15 Vert Supblo Dir Drive — Edwards Blower",       "615-MV15", ""],
+  ["—",                   "Vacuum Pump",     "Oerlikon WH4400 Frequency Driven Booster Pump 7040 m3hr","WH4400", ""],
+  ["—",                   "Vacuum Pump",     "Diffusion Pump Repair Kit (Seals)",                     "K0377165", ""],
+  ["—",                   "Vacuum Pump",     "Diffusion Pump Oil 704, 1 Gallon",                      "FT 704", ""],
+  ["—",                   "Vacuum Pump",     "VACUUM PKG with 20HP TENV Motor",                       "HV5000", ""],
 
   // ── DRIVE MECHANISM / CHAMBER ─────────────────────────────────────────────
-  ["—",                   "Drive Mechanism", "Colt Gear MILD Steel Rev 2 — Doors and Chamber (x4)",   "03-02-0155"],
-  ["—",                   "Drive Mechanism", "Pin Assembly for Lower Drive Reel on Door",             "03-02-0151"],
-  ["—",                   "Drive Mechanism", "Hub for Upper Pin on Door",                             "03-02-0153"],
-  ["—",                   "Drive Mechanism", "Pin for Upper Hub on Door",                             "03-02-0154"],
-  ["—",                   "Drive Mechanism", "Plate for Gear Table Inside Chamber",                   "03-02-0157"],
-  ["—",                   "Drive Mechanism", "Pin Shaft for Gear Table Inside Chamber",               "03-02-0158"],
-  ["—",                   "Drive Mechanism", "Colt 4828 Door Plate Lower",                            "03-02-0150"],
-  ["—",                   "Drive Mechanism", "Colt 4828 Door Plate Upper",                            "03-02-0152"],
-  ["—",                   "Drive Mechanism", "Colt 4828 Gear Table Assembly (Full Assembly Inside Chamber)", "MVSGTA"],
-  ["—",                   "Drive Mechanism", "Spring for Gear Table Inside Chamber",                  "MVSGTAS"],
-  ["—",                   "Drive Mechanism", "Colt 4828 Door Hinge Bearing",                          "PSF121608"],
-  ["—",                   "Drive Mechanism", "Baldor DC Gear Motor 50 RPM TENV 1/4 HP (Fixture Drive)","GPP7460"],
-  ["—",                   "Drive Mechanism", "Rotary Feedthru Long Shaft — Drawing No. 50-103193",    "SS-750-SLAE"],
-  ["—",                   "Drive Mechanism", "1\" Gas Feedthru for Chamber",                          "00-02-0327"],
-  ["—",                   "Drive Mechanism", "Plasma Bar Tab",                                        "03-02-0309"],
-  ["—",                   "Drive Mechanism", "Colt Shielding for Chamber and Doors",                  "03-02-0333"],
-  ["—",                   "Drive Mechanism", "Colt Collar Bushing — Bronze",                          "03-02-0381"],
-  ["—",                   "Drive Mechanism", "Colt 4828 Gas Tubes for Chamber",                       "MVS4828GT"],
-  ["—",                   "Drive Mechanism", "Colt 4828 Plasma Bars for Chamber",                     "C48VPB"],
-  ["—",                   "Drive Mechanism", "1\" Base Plate Plug",                                   "BASEPLUG1"],
+  ["—",                   "Drive Mechanism", "Colt Gear MILD Steel Rev 2 — Doors and Chamber (x4)",   "03-02-0155", ""],
+  ["—",                   "Drive Mechanism", "Pin Assembly for Lower Drive Reel on Door",             "03-02-0151", ""],
+  ["—",                   "Drive Mechanism", "Hub for Upper Pin on Door",                             "03-02-0153", ""],
+  ["—",                   "Drive Mechanism", "Pin for Upper Hub on Door",                             "03-02-0154", ""],
+  ["—",                   "Drive Mechanism", "Plate for Gear Table Inside Chamber",                   "03-02-0157", ""],
+  ["—",                   "Drive Mechanism", "Pin Shaft for Gear Table Inside Chamber",               "03-02-0158", ""],
+  ["—",                   "Drive Mechanism", "Colt 4828 Door Plate Lower",                            "03-02-0150", ""],
+  ["—",                   "Drive Mechanism", "Colt 4828 Door Plate Upper",                            "03-02-0152", ""],
+  ["—",                   "Drive Mechanism", "Colt 4828 Gear Table Assembly (Full Assembly Inside Chamber)", "MVSGTA", ""],
+  ["—",                   "Drive Mechanism", "Spring for Gear Table Inside Chamber",                  "MVSGTAS", ""],
+  ["—",                   "Drive Mechanism", "Colt 4828 Door Hinge Bearing",                          "PSF121608", ""],
+  ["—",                   "Drive Mechanism", "Baldor DC Gear Motor 50 RPM TENV 1/4 HP (Fixture Drive)","GPP7460", ""],
+  ["—",                   "Drive Mechanism", "Rotary Feedthru Long Shaft — Drawing No. 50-103193",    "SS-750-SLAE", ""],
+  ["—",                   "Drive Mechanism", "1\" Gas Feedthru for Chamber",                          "00-02-0327", ""],
+  ["—",                   "Drive Mechanism", "Plasma Bar Tab",                                        "03-02-0309", ""],
+  ["—",                   "Drive Mechanism", "Colt Shielding for Chamber and Doors",                  "03-02-0333", ""],
+  ["—",                   "Drive Mechanism", "Colt Collar Bushing — Bronze",                          "03-02-0381", ""],
+  ["—",                   "Drive Mechanism", "Colt 4828 Gas Tubes for Chamber",                       "MVS4828GT", ""],
+  ["—",                   "Drive Mechanism", "Colt 4828 Plasma Bars for Chamber",                     "C48VPB", ""],
+  ["—",                   "Drive Mechanism", "1\" Base Plate Plug",                                   "BASEPLUG1", ""],
 
   // ── AUTOMATION / INDEXING ─────────────────────────────────────────────────
-  ["—",                   "Automation",      "HD Actuator FHA-17C-100-US-250",                        "9800037503"],
-  ["—",                   "Automation",      "A-B Stepper Module",                                    "1746-HSTP1"],
-  ["—",                   "Automation",      "Rotary Feedthru",                                       "133439"],
-  ["—",                   "Automation",      "Copley Servo Amplifier",                                "ADP-180-18"],
-  ["—",                   "Automation",      "Copley 150VDC Power Supply",                            "PST-150-05"],
-  ["—",                   "Automation",      "A-B Micrologix Input Card",                             "1762-IQ16"],
-  ["—",                   "Automation",      "A-B Micrologix Output Card",                            "1762-OB16"],
-  ["—",                   "Automation",      "A-B Micrologix 1100 Processor",                         "1763-L16BBB"],
-  ["—",                   "Automation",      "4-Port Ethernet Hub",                                   "EISK4-100T"],
-  ["—",                   "Automation",      "Servo Amplifier",                                       "EN-208 W/FM-2 (960501-10)"],
-  ["—",                   "Automation",      "Program Module for Servo Amplifier",                    "FM-3E (960495-02)"],
-  ["—",                   "Automation",      "Servo Motor",                                           "NTM-345-CONS-0000 (960771-06)"],
-  ["—",                   "Automation",      "Servo Encoder Cable",                                   "CFCS-015 (810721-15)"],
-  ["—",                   "Automation",      "Servo Motor Cable",                                     "CMDS-015 (810719-15)"],
-  ["—",                   "Automation",      "Vacuum Switch for Chamber — Atmosphere",                "2311 PS113A"],
-  ["—",                   "Automation",      "Braking Resistor for Mitsubishi Drive",                 "FR-ABR-H1.5K"],
-  ["—",                   "Automation",      "Mitsubishi Drive",                                      "FR-E540-1.5-NA"],
-  ["—",                   "Automation",      "Turck Proximity Switch",                                "B14M12AP6XH1141"],
-  ["—",                   "Automation",      "A-B Output Card (Turntable)",                           "1746-OW16"],
-  ["—",                   "Automation",      "A-B Input Card (Turntable)",                            "1746-IB16"],
+  ["—",                   "Automation",      "HD Actuator FHA-17C-100-US-250",                        "9800037503", ""],
+  ["—",                   "Automation",      "A-B Stepper Module",                                    "1746-HSTP1", ""],
+  ["—",                   "Automation",      "Rotary Feedthru",                                       "133439", ""],
+  ["—",                   "Automation",      "Copley Servo Amplifier",                                "ADP-180-18", ""],
+  ["—",                   "Automation",      "Copley 150VDC Power Supply",                            "PST-150-05", ""],
+  ["—",                   "Automation",      "A-B Micrologix Input Card",                             "1762-IQ16", ""],
+  ["—",                   "Automation",      "A-B Micrologix Output Card",                            "1762-OB16", ""],
+  ["—",                   "Automation",      "A-B Micrologix 1100 Processor",                         "1763-L16BBB", ""],
+  ["—",                   "Automation",      "4-Port Ethernet Hub",                                   "EISK4-100T", ""],
+  ["—",                   "Automation",      "Servo Amplifier",                                       "EN-208 W/FM-2 (960501-10)", ""],
+  ["—",                   "Automation",      "Program Module for Servo Amplifier",                    "FM-3E (960495-02)", ""],
+  ["—",                   "Automation",      "Servo Motor",                                           "NTM-345-CONS-0000 (960771-06)", ""],
+  ["—",                   "Automation",      "Servo Encoder Cable",                                   "CFCS-015 (810721-15)", ""],
+  ["—",                   "Automation",      "Servo Motor Cable",                                     "CMDS-015 (810719-15)", ""],
+  ["—",                   "Automation",      "Vacuum Switch for Chamber — Atmosphere",                "2311 PS113A", ""],
+  ["—",                   "Automation",      "Braking Resistor for Mitsubishi Drive",                 "FR-ABR-H1.5K", ""],
+  ["—",                   "Automation",      "Mitsubishi Drive",                                      "FR-E540-1.5-NA", ""],
+  ["—",                   "Automation",      "Turck Proximity Switch",                                "B14M12AP6XH1141", ""],
+  ["—",                   "Automation",      "A-B Output Card (Turntable)",                           "1746-OW16", ""],
+  ["—",                   "Automation",      "A-B Input Card (Turntable)",                            "1746-IB16", ""],
 
   // ── ENCLOSURE / ELECTRICAL MISC ──────────────────────────────────────────
-  ["—",                   "Enclosure / Misc", "Electrical Enclosure Light Fixture",                   "3EU89-2"],
-  ["—",                   "Enclosure / Misc", "Hoffman Enclosure Light Switch",                       "ALFSWD"],
-  ["—",                   "Enclosure / Misc", "Hoffman Cooling Fan 10\"",                             "TFP101"],
-  ["—",                   "Enclosure / Misc", "Bearing",                                              "LRT303520"],
+  ["—",                   "Enclosure / Misc", "Electrical Enclosure Light Fixture",                   "3EU89-2", ""],
+  ["—",                   "Enclosure / Misc", "Hoffman Enclosure Light Switch",                       "ALFSWD", ""],
+  ["—",                   "Enclosure / Misc", "Hoffman Cooling Fan 10\"",                             "TFP101", ""],
+  ["—",                   "Enclosure / Misc", "Bearing",                                              "LRT303520", ""],
 
   // ── TARGETS ───────────────────────────────────────────────────────────────
-  ["—",                   "Target",          "Aluminum Target 6x54 1-Piece",                          "M 654 AL"],
-  ["—",                   "Target",          "Aluminum Target 3-Piece — ACP5080M .75x6.0x19.0",       "AL6543"],
-  ["—",                   "Target",          "Chromium Target 3-Piece — Call for price",              "Cr6x543"],
+  ["—",                   "Target",          "Aluminum Target 6x54 1-Piece",                          "M 654 AL", ""],
+  ["—",                   "Target",          "Aluminum Target 3-Piece — ACP5080M .75x6.0x19.0",       "AL6543", ""],
+  ["—",                   "Target",          "Chromium Target 3-Piece — Call for price",              "Cr6x543", ""],
 
   // ── SERVICE KITS & PM ─────────────────────────────────────────────────────
-  ["—",                   "Service / PM",    "Annual PM Kit — with pump filter (specify pump model)", "MVSPMKF"],
-  ["—",                   "Service / PM",    "Annual PM Kit — without pump filter",                   "MVSPMK"],
-  ["—",                   "Service / PM",    "Annual Systems Preventative Maintenance (excludes travel)", "MVSASPM"],
-  ["—",                   "Service / PM",    "Annual Cathode Service — rebuild 2 cathodes (excl. travel)", "MVSACS"],
-  ["—",                   "Service / PM",    "Annual Plasma Bar Service — 4x HV feedthrus (excl. travel)", "MVSPBS"],
-  ["—",                   "Service / PM",    "General Service — daily rate onsite M-F (weekends 1.5x)", "MVSGS"],
+  ["—",                   "Service / PM",    "Annual PM Kit — with pump filter (specify pump model)", "MVSPMKF", ""],
+  ["—",                   "Service / PM",    "Annual PM Kit — without pump filter",                   "MVSPMK", ""],
+  ["—",                   "Service / PM",    "Annual Systems Preventative Maintenance (excludes travel)", "MVSASPM", ""],
+  ["—",                   "Service / PM",    "Annual Cathode Service — rebuild 2 cathodes (excl. travel)", "MVSACS", ""],
+  ["—",                   "Service / PM",    "Annual Plasma Bar Service — 4x HV feedthrus (excl. travel)", "MVSPBS", ""],
+  ["—",                   "Service / PM",    "General Service — daily rate onsite M-F (weekends 1.5x)", "MVSGS", ""],
 
 ];
 
@@ -1498,6 +1624,40 @@ let editGrouped = false;  // true when "Group by Part #" is active in edit mode
 let unsavedChanges = 0;
 let _pinModalMode  = "save";
 
+// Column order: indices into row array, display order
+// Default: Part Number(3), Category(1), Description(2), Location(4), Schematic(0)
+let colOrder = [3, 1, 2, 4, 0];
+const colMeta = {
+  0: { label: "Schematic",   cls: "col-schematic" },
+  1: { label: "Category",    cls: "col-category"  },
+  2: { label: "Description", cls: "col-desc"      },
+  3: { label: "Part Number", cls: "col-partnum"   },
+  4: { label: "Location",    cls: "col-location"  },
+};
+// Per-column widths (px), keyed by dataIndex
+const colWidthDefaults = { 3: 125, 1: 100, 2: 220, 4: 130, 0: 140 };
+let colWidths = { ...colWidthDefaults };
+
+// Apply widths via a <style> tag so both thead and tbody stay in sync
+function applyColWidths() {
+  let styleEl = document.getElementById("col-width-style");
+  if (!styleEl) {
+    styleEl = document.createElement("style");
+    styleEl.id = "col-width-style";
+    document.head.appendChild(styleEl);
+  }
+  const rules = Object.entries(colWidths).map(([dataIdx, w]) => {
+    const cls = colMeta[dataIdx].cls;
+    return `.${cls} { width: ${w}px; min-width: ${w}px; max-width: ${w}px; }`;
+  }).join("\n");
+  styleEl.textContent = rules;
+}
+
+function resetColWidths() {
+  colWidths = { ...colWidthDefaults };
+  applyColWidths();
+}
+
 // ── SORT ─────────────────────────────────────────────────────────────────────
 function naturalSort(a, b) {
   const ax=[], bx=[];
@@ -1514,12 +1674,175 @@ function naturalSort(a, b) {
 function sortTable(col) {
   sortAsc = (sortCol===col) ? !sortAsc : true;
   sortCol = col;
-  document.querySelectorAll("thead th[data-col]").forEach(th => {
-    const c = parseInt(th.dataset.col);
-    th.classList.toggle("sorted", c===col);
-    th.querySelector(".sort-arrow").textContent = (c===col && !sortAsc) ? "▼" : "▲";
-  });
+  renderHeaders();
   render();
+}
+
+// ── COLUMN REORDER (edit mode drag-and-drop) ─────────────────────────────────
+let _dragSrcIdx = -1;
+
+function initColDrag() {
+  const ths = document.querySelectorAll("thead th[data-col]");
+  ths.forEach((th, i) => {
+    th.setAttribute("draggable", editMode ? "true" : "false");
+    th.ondragstart = (e) => {
+      if (e.target.classList.contains("col-resize-handle")) { e.preventDefault(); return; }
+      _dragSrcIdx = i;
+      th.classList.add("col-dragging");
+      e.dataTransfer.effectAllowed = "move";
+    };
+    th.ondragend = () => {
+      th.classList.remove("col-dragging");
+      document.querySelectorAll("thead th[data-col]").forEach(t => t.classList.remove("col-drag-over"));
+    };
+    th.ondragover = (e) => {
+      if (_dragSrcIdx < 0) return;
+      e.preventDefault();
+      e.dataTransfer.dropEffect = "move";
+      document.querySelectorAll("thead th[data-col]").forEach(t => t.classList.remove("col-drag-over"));
+      th.classList.add("col-drag-over");
+    };
+    th.ondragleave = () => th.classList.remove("col-drag-over");
+    th.ondrop = (e) => {
+      e.preventDefault();
+      th.classList.remove("col-drag-over");
+      if (_dragSrcIdx === i || _dragSrcIdx < 0) return;
+      const moved = colOrder.splice(_dragSrcIdx, 1)[0];
+      colOrder.splice(i, 0, moved);
+      _dragSrcIdx = -1;
+      renderHeaders();
+      render();
+    };
+  });
+}
+
+// ── COLUMN RESIZE / COLUMN CONTROL BAR ───────────────────────────────────────
+let _ccbActiveIdx = -1;   // dataIdx of currently selected column
+
+function ccbShow(dataIdx) {
+  _ccbActiveIdx = dataIdx;
+  document.getElementById("ccbColName").textContent = colMeta[dataIdx].label;
+  document.getElementById("colControlBar").classList.add("visible");
+  document.querySelectorAll("thead th[data-col]").forEach(th => {
+    th.classList.toggle("ccb-active", parseInt(th.dataset.col) === dataIdx);
+  });
+  _ccbUpdateMoveButtons();
+}
+
+function ccbHide() {
+  _ccbActiveIdx = -1;
+  document.getElementById("colControlBar").classList.remove("visible");
+  document.querySelectorAll("thead th[data-col]").forEach(th => th.classList.remove("ccb-active"));
+}
+
+function _ccbUpdateMoveButtons() {
+  const pos = colOrder.indexOf(_ccbActiveIdx);
+  document.getElementById("ccbLeft").disabled  = pos <= 0;
+  document.getElementById("ccbRight").disabled = pos >= colOrder.length - 1;
+  document.getElementById("ccbLeft").style.opacity  = pos <= 0 ? "0.3" : "1";
+  document.getElementById("ccbRight").style.opacity = pos >= colOrder.length - 1 ? "0.3" : "1";
+}
+
+// Wire up control bar buttons
+document.getElementById("ccbClose").addEventListener("click", ccbHide);
+
+document.getElementById("ccbLeft").addEventListener("click", () => {
+  const pos = colOrder.indexOf(_ccbActiveIdx);
+  if (pos <= 0) return;
+  colOrder.splice(pos, 1);
+  colOrder.splice(pos - 1, 0, _ccbActiveIdx);
+  renderHeaders();
+  render();
+  document.querySelectorAll("thead th[data-col]").forEach(th => {
+    th.classList.toggle("ccb-active", parseInt(th.dataset.col) === _ccbActiveIdx);
+  });
+  _ccbUpdateMoveButtons();
+});
+
+document.getElementById("ccbRight").addEventListener("click", () => {
+  const pos = colOrder.indexOf(_ccbActiveIdx);
+  if (pos >= colOrder.length - 1) return;
+  colOrder.splice(pos, 1);
+  colOrder.splice(pos + 1, 0, _ccbActiveIdx);
+  renderHeaders();
+  render();
+  document.querySelectorAll("thead th[data-col]").forEach(th => {
+    th.classList.toggle("ccb-active", parseInt(th.dataset.col) === _ccbActiveIdx);
+  });
+  _ccbUpdateMoveButtons();
+});
+
+function _ccbAdjust(delta) {
+  if (_ccbActiveIdx < 0) return;
+  colWidths[_ccbActiveIdx] = Math.max(60, colWidths[_ccbActiveIdx] + delta);
+  applyColWidths();
+}
+
+document.getElementById("ccbNarrow").addEventListener("click", () => _ccbAdjust(-20));
+document.getElementById("ccbWiden").addEventListener("click",  () => _ccbAdjust(+20));
+document.getElementById("ccbReset").addEventListener("click",  () => {
+  if (_ccbActiveIdx < 0) return;
+  colWidths[_ccbActiveIdx] = colWidthDefaults[_ccbActiveIdx];
+  applyColWidths();
+});
+
+// Hold-to-repeat on narrow/widen
+(function() {
+  let _t = null;
+  function startRep(delta) { _t = setInterval(() => _ccbAdjust(delta), 120); }
+  function stopRep()        { clearInterval(_t); }
+  ["ccbNarrow","ccbWiden"].forEach((id, i) => {
+    const delta = i === 0 ? -20 : +20;
+    const el = document.getElementById(id);
+    el.addEventListener("mousedown",  () => startRep(delta));
+    el.addEventListener("touchstart", () => startRep(delta), { passive: true });
+    ["mouseup","mouseleave","touchend","touchcancel"].forEach(ev => el.addEventListener(ev, stopRep));
+  });
+})();
+
+function renderHeaders() {
+  applyColWidths();
+  const tr = document.querySelector("thead tr");
+  const editTh = document.getElementById("editColHeader");
+  tr.innerHTML = "";
+  tr.appendChild(editTh);
+  editTh.style.display = editMode ? "" : "none";
+
+  colOrder.forEach((dataIdx) => {
+    const meta = colMeta[dataIdx];
+    const th = document.createElement("th");
+    th.dataset.col = dataIdx;
+    th.className   = meta.cls;
+    if (dataIdx === sortCol) th.classList.add("sorted");
+    if (editMode) {
+      th.setAttribute("draggable", "true");
+      th.title = "Drag to reorder  •  Click to resize";
+    }
+
+    const labelSpan = document.createElement("span");
+    labelSpan.style.pointerEvents = "none";
+    labelSpan.innerHTML = `${meta.label} <span class="sort-arrow">${(dataIdx === sortCol && !sortAsc) ? "▼" : "▲"}</span>`;
+    th.appendChild(labelSpan);
+
+    if (editMode) {
+      th.addEventListener("click", (e) => {
+        if (e.target.closest(".col-resize-btns")) return;
+        const already = _ccbActiveIdx === dataIdx && document.getElementById("colControlBar").classList.contains("visible");
+        if (already) {
+          sortTable(dataIdx);
+        } else {
+          ccbShow(dataIdx);
+        }
+      });
+      th.addEventListener("contextmenu", (e) => e.preventDefault());
+    } else {
+      th.addEventListener("click", () => sortTable(dataIdx));
+    }
+
+    tr.appendChild(th);
+  });
+
+  if (editMode) initColDrag();
 }
 
 // ── RENDER ───────────────────────────────────────────────────────────────────
@@ -1538,15 +1861,15 @@ function render() {
   }
 
   let rows = sourceRows.filter(({ row: r }) => {
-    const [ref, cat, desc, pn] = r;
-    const haystack = [ref,cat,desc,pn].join(" ").toLowerCase();
+    const [ref, cat, desc, pn, loc] = r;
+    const haystack = [ref,cat,desc,pn,loc||""].join(" ").toLowerCase();
     if (q && !terms.some(t => haystack.includes(t))) return false;
     if (filterCat && cat!==filterCat) return false;
     return true;
   });
 
   rows.sort(({ row: a }, { row: b }) => {
-    const av = a[sortCol].toLowerCase(), bv = b[sortCol].toLowerCase();
+    const av = (a[sortCol]||"").toLowerCase(), bv = (b[sortCol]||"").toLowerCase();
     const aNL = av==="not listed", bNL = bv==="not listed";
     if (aNL && !bNL) return 1;
     if (!aNL && bNL) return -1;
@@ -1565,24 +1888,29 @@ function render() {
           <button class="row-del-btn" onclick="deletePart(${origIdx})" title="Delete">🗑️</button>
         </td>`
       : "";
+
+    // Build cells in colOrder
+    const loc = r[4] || "";
     if (editMode) {
       const qe = (fi) => `onclick="quickEditField(${origIdx},${fi})" style="cursor:text" title="Click to edit"`;
       const cs = catStyles[r[1]] || { bg:"#F3F4F6", color:"#374151" };
-      return `<tr>
-        ${editCols}
-        <td ${qe(3)}><span class="pn-link">${r[3]}</span></td>
-        <td ${qe(1)}><span class="cat-badge" style="background:${cs.bg};color:${cs.color}">${r[1]}</span></td>
-        <td ${qe(2)}><span class="desc-link">${r[2]}</span></td>
-        <td class="ref-cell" ${qe(0)}>${r[0]}</td>
-      </tr>`;
+      const cellMap = {
+        3: `<td class="${colMeta[3].cls}" ${qe(3)}><span class="pn-link">${r[3]}</span></td>`,
+        1: `<td class="${colMeta[1].cls}" ${qe(1)}><span class="cat-badge" style="background:${cs.bg};color:${cs.color}">${r[1]}</span></td>`,
+        2: `<td class="${colMeta[2].cls}" ${qe(2)}><span class="desc-link">${r[2]}</span></td>`,
+        4: `<td class="${colMeta[4].cls}" ${qe(4)}>${loc || '<span class="not-listed">—</span>'}</td>`,
+        0: `<td class="${colMeta[0].cls} ref-cell" ${qe(0)}>${r[0]}</td>`,
+      };
+      return `<tr>${editCols}${colOrder.map(c => cellMap[c]).join("")}</tr>`;
     }
-    return `<tr>
-      ${editCols}
-      <td>${pnHtml(r[3], r[2])}</td>
-      <td>${badgeHtml(r[1], r[3])}</td>
-      <td>${descHtml(r[2], r[3])}</td>
-      <td class="ref-cell">${r[0]}</td>
-    </tr>`;
+    const cellMap = {
+      3: `<td class="${colMeta[3].cls}">${pnHtml(r[3], r[2])}</td>`,
+      1: `<td class="${colMeta[1].cls}">${badgeHtml(r[1], r[3])}</td>`,
+      2: `<td class="${colMeta[2].cls}">${descHtml(r[2], r[3])}</td>`,
+      4: `<td class="${colMeta[4].cls}">${loc || '<span class="not-listed">—</span>'}</td>`,
+      0: `<td class="${colMeta[0].cls} ref-cell">${r[0]}</td>`,
+    };
+    return `<tr>${editCols}${colOrder.map(c => cellMap[c]).join("")}</tr>`;
   }).join("");
 
   const editColHeader = document.getElementById("editColHeader");
@@ -1865,6 +2193,7 @@ function selectMachine(key, tabEl) {
 }
 
 buildLegend();
+renderHeaders();
 render();
 
 // ── ON PAGE LOAD: fetch master copy first, then restore personal PIN if any ──
@@ -2011,10 +2340,12 @@ function toggleEditMode() {
     document.getElementById("catList").innerHTML = cats.map(c => `<option value="${c}">`).join("");
   } else {
     editGrouped = false;
+    ccbHide();
   }
 
   document.getElementById("partsTable").classList.toggle("edit-active", editMode);
   updateEditBadge();
+  renderHeaders();
   render();
 }
 
@@ -2059,6 +2390,7 @@ function showPartModal(part, rowIndex) {
   document.getElementById("pmCat").value  = part ? part[1] : "";
   document.getElementById("pmDesc").value = part ? part[2] : "";
   document.getElementById("pmPn").value   = part ? part[3] : "";
+  document.getElementById("pmLoc").value  = part ? (part[4] || "") : "";
   document.getElementById("pmTitle").textContent = rowIndex === -1 ? "Add New Part" : "Edit Part";
   document.getElementById("partModal")._rowIndex = rowIndex;
   document.getElementById("partModal").style.display = "flex";
@@ -2070,14 +2402,15 @@ async function savePartModal() {
   const cat  = document.getElementById("pmCat").value.trim();
   const desc = document.getElementById("pmDesc").value.trim();
   const pn   = document.getElementById("pmPn").value.trim()   || "Not listed";
+  const loc  = document.getElementById("pmLoc").value.trim();
   if (!cat)  { await customAlert("Category is required.", { icon: '⚠️', iconClass: 'warn', badge: 'VALIDATION ERROR', title: 'Missing Field' }); return; }
   if (!desc) { await customAlert("Description is required.", { icon: '⚠️', iconClass: 'warn', badge: 'VALIDATION ERROR', title: 'Missing Field' }); return; }
   if (activeData === null) activeData = getWorkingData().map(r => [...r]);
   const idx = document.getElementById("partModal")._rowIndex;
   if (idx === -1) {
-    activeData.push([ref, cat, desc, pn]);
+    activeData.push([ref, cat, desc, pn, loc]);
   } else {
-    activeData[idx] = [ref, cat, desc, pn];
+    activeData[idx] = [ref, cat, desc, pn, loc];
   }
   unsavedChanges++;
   updateEditBadge();
@@ -2091,7 +2424,7 @@ function closePartModal() {
 }
 
 // ── QUICK EDIT (single-field inline editor for edit mode) ─────────────────────
-const _fieldLabels = ["Schematic Ref", "Category", "Description", "Part Number"];
+const _fieldLabels = ["Schematic Ref", "Category", "Description", "Part Number", "Location"];
 let _qeIdx = -1, _qeField = -1;
 
 function quickEditField(origIdx, fieldIdx) {
