@@ -669,12 +669,23 @@
 
   .edit-actions {
     display: none;
-    gap: 8px;
-    align-items: center;
-    flex-wrap: wrap;
+    flex-direction: column;
+    gap: 6px;
     padding: 8px 0 4px;
     border-top: 2px dashed #c94020;
     margin-top: 2px;
+  }
+  .edit-notices {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 12px;
+  }
+  .edit-btns {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
   }
   .edit-notice {
     font-size: 12px;
@@ -1010,13 +1021,17 @@
     <span class="count" id="count"></span>
   </div>
   <div class="edit-actions" id="editActions">
-    <span class="edit-notice">✏️ Edit Mode — rows shown ungrouped for editing</span>
-    <span class="col-reorder-hint">Tap a column header to move or resize it</span>
-    <button class="export-btn" onclick="addPart()">➕ Add Part</button>
-    <button class="export-btn" id="groupSplitBtn" onclick="toggleEditGrouped()">📋 Group by Part #</button>
-    <button class="export-btn" onclick="openPinModal('save')">💾 Save</button>
-    <button class="export-btn" onclick="openPinModal('restore')">📥 Restore</button>
-    <button class="export-btn" onclick="openPinModal('reset')">↩️ Reset</button>
+    <div class="edit-notices">
+      <span class="edit-notice">✏️ Edit Mode — rows shown ungrouped for editing</span>
+      <span class="col-reorder-hint">Tap a column header to move or resize it</span>
+    </div>
+    <div class="edit-btns">
+      <button class="export-btn" onclick="addPart()">➕ Add Part</button>
+      <button class="export-btn" id="groupSplitBtn" onclick="toggleEditGrouped()">📋 Group by Part #</button>
+      <button class="export-btn" onclick="openPinModal('save')">💾 Save</button>
+      <button class="export-btn" onclick="openPinModal('restore')">📥 Restore</button>
+      <button class="export-btn" onclick="openPinModal('reset')">↩️ Reset</button>
+    </div>
   </div>
 </div>
 
