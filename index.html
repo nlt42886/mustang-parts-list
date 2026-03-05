@@ -840,7 +840,7 @@
   <div class="pin-card">
     <img src="icons/icon-512x512.png" alt="Logo">
     <h2>PARTS TRACKER</h2>
-    <p>Enter your 6-digit PIN to access</p>
+    <p>Enter your 7-digit PIN to access</p>
     <div class="pin-dots" id="pinDots">
       <div class="pin-dot" id="pd0"></div>
       <div class="pin-dot" id="pd1"></div>
@@ -848,6 +848,7 @@
       <div class="pin-dot" id="pd3"></div>
       <div class="pin-dot" id="pd4"></div>
       <div class="pin-dot" id="pd5"></div>
+      <div class="pin-dot" id="pd6"></div>
     </div>
     <div class="pin-keypad">
       <button class="pin-key" onclick="pinKey('1')">1</button>
@@ -22585,32 +22586,34 @@ function customConfirm(msg, opts) {
 // How it works:
 //   1. On page load, checks localStorage for a valid 30-day session token.
 //   2. If valid → show app immediately, skip PIN screen.
-//   3. If not → show PIN screen. User enters 6 digits.
+//   3. If not → show PIN screen. User enters 7 digits.
 //   4. PIN is stretched using PBKDF2 (200,000 iterations + salt) — the same
 //      algorithm used by the save/restore system. This means even if someone
-//      gets the hash from Firestore, brute-forcing it would take years on
-//      modern hardware. Rainbow tables are completely useless against PBKDF2.
-//   5. The derived key is compared against the value stored in Firestore
-//      (doc: config/accessPin, field: hash).
+//      gets the hash, brute-forcing it would take years on modern hardware.
+//      Rainbow tables are completely useless against PBKDF2.
+//   5. The derived key is compared against _GATE_HASH below.
 //   6. On match → a random session token is stored in localStorage with a
 //      30-day expiry, then the app is revealed.
 //   7. The raw PIN is never stored or transmitted anywhere.
 //
 // To change the PIN later:
 //   - Open your browser console on any page, run _gateHashPin("NEWPIN") and
-//     copy the output, then paste it into Firestore → config → accessPin → hash.
-//   - OR use: https://nlt42886.github.io/mustang-parts-list/ with the new PIN
-//     (the first unrecognized PIN entered will NOT auto-register — you must
-//     update Firestore manually for security).
+//     copy the output, then replace the _GATE_HASH constant below.
+//   - Also update _PIN_LENGTH if the digit count changes.
 //
 // To change session duration: edit SESSION_DAYS below.
 
 const SESSION_DAYS = 30;   // ← Change this to any number of days
 const MAX_ATTEMPTS  = 3;   // ← Wrong guesses before lockout
 const LOCKOUT_MINS  = 60;  // ← Lockout duration in minutes
+const _PIN_LENGTH   = 7;   // ← Digits in the PIN
 
-// Salt must match what was used to generate the Firestore hash.
-// Do NOT change this unless you also regenerate the Firestore hash.
+// To change the PIN: run _gateHashPin("NEWPIN") in the browser console,
+// copy the hex output, and paste it here. Also update _PIN_LENGTH above.
+const _GATE_HASH = "f9a760e1cd57252a0a02ee999774a8d44856ee7e2afefc2c99c5248ee6c30f03";
+
+// Salt used when the current hash was generated. Do NOT change this unless
+// you also regenerate _GATE_HASH above.
 const _GATE_SALT = "mustang-gate-v1";
 
 let _pinBuffer = "";
@@ -22760,7 +22763,7 @@ function _showError(msg, permanent) {
 }
 
 function _updateDots(error) {
-  for (let i = 0; i < 6; i++) {
+  for (let i = 0; i < _PIN_LENGTH; i++) {
     const dot = document.getElementById("pd" + i);
     dot.classList.toggle("filled", !error && i < _pinBuffer.length);
     dot.classList.toggle("error", error);
@@ -22770,11 +22773,11 @@ function _updateDots(error) {
 function pinKey(digit) {
   if (_pinLocked) return;
   if (_getLockout()) return;
-  if (_pinBuffer.length >= 6) return;
+  if (_pinBuffer.length >= _PIN_LENGTH) return;
   _pinBuffer += digit;
   _updateDots(false);
   document.getElementById("pinStatus").textContent = "";
-  if (_pinBuffer.length === 6) _submitPin();
+  if (_pinBuffer.length === _PIN_LENGTH) _submitPin();
 }
 
 function pinBackspace() {
@@ -22789,13 +22792,7 @@ async function _submitPin() {
   document.getElementById("pinStatus").textContent = "Verifying…";
   try {
     const enteredHash = await _gateHashPin(_pinBuffer);
-    const doc = await _db.collection("config").doc("accessPin").get();
-    if (!doc.exists) {
-      _showError("Not configured — see setup instructions");
-      return;
-    }
-    const storedHash = doc.data().hash;
-    if (enteredHash !== storedHash) {
+    if (enteredHash !== _GATE_HASH) {
       const lockedOut = _recordFailedAttempt();
       if (lockedOut) {
         const lockout = _getLockout();
@@ -22814,7 +22811,7 @@ async function _submitPin() {
     _saveSession(token);
     _showApp();
   } catch(e) {
-    _showError("Connection error — try again");
+    _showError("Verification error — try again");
   }
 }
 
