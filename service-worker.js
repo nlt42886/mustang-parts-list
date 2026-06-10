@@ -1,4 +1,4 @@
-const CACHE_NAME = 'mvs-parts-v7';
+const CACHE_NAME = 'mvs-parts-v8';
 const ASSETS = [
   './',
   './index.html',
